@@ -1,0 +1,8 @@
+/config.php
+/data/*.sqlite
+/data/installed.lock
+/uploads/**/*
+!/uploads/.htaccess
+!/uploads/*/
+!/uploads/*/.gitkeep
+.DS_Store
