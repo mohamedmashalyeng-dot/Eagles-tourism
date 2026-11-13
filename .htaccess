@@ -2,14 +2,28 @@
 Options -Indexes
 DirectoryIndex index.php index.html
 
-# Protect sensitive files
-<FilesMatch "^(config\.php|config\.sample\.php|README\.md|\.gitignore|.*\.sqlite)$">
+# Protect sensitive files: config, docs, install keys, logs, databases, dumps and backup copies
+<FilesMatch "^(config\.php.*|config\.sample\.php|README\.md|DEPLOYMENT\.md|\.gitignore|\.user\.ini|\.env.*)$">
     Require all denied
 </FilesMatch>
+<FilesMatch "\.(sqlite|sqlite3|db|sql|key|log|lock|bak|backup|old|orig|save|swp|tmp|dist|zip|tar|gz|tgz|7z|rar)$|~$">
+    Require all denied
+</FilesMatch>
+# Never serve version-control folders
+<IfModule mod_alias.c>
+    RedirectMatch 404 /\.(git|svn|hg)(/|$)
+</IfModule>
 
 # Force HTTPS (Hostinger provides a free SSL certificate)
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Same protection via rewrite rules (also honoured by LiteSpeed, which may ignore FilesMatch/Require)
+    RewriteRule ^(includes|data)(/|$) - [F,L]
+    RewriteRule ^uploads/.*\.(php\d?|phtml|phar|pht)$ - [F,L,NC]
+    RewriteRule (^|/)(config\.php.*|config\.sample\.php|README\.md|DEPLOYMENT\.md|\.gitignore|\.user\.ini|\.env.*)$ - [F,L,NC]
+    RewriteRule \.(sqlite|sqlite3|db|sql|key|log|lock|bak|backup|old|orig|save|swp|tmp|dist|zip|tar|gz|tgz|7z|rar)$ - [F,L,NC]
+
     RewriteCond %{HTTPS} off
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)

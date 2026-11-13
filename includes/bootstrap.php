@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 define('ROOT', dirname(__DIR__));
 define('APP_VERSION', '1.0.0');
+/** Private folder next to (outside) the web root: config, install key and logs live here when the host allows it. */
+define('PRIVATE_DIR', dirname(ROOT) . '/eagles-private');
 
 mb_internal_encoding('UTF-8');
 date_default_timezone_set('Africa/Cairo');
@@ -76,12 +78,26 @@ function redirect(string $to): never
 
 /* -------------------------------------------------------------- config */
 
+/**
+ * Location of the config file: outside the web root (PRIVATE_DIR) first,
+ * then the legacy location inside the site folder.
+ */
+function config_path(): ?string
+{
+    foreach ([PRIVATE_DIR . '/config.php', ROOT . '/config.php'] as $file) {
+        if (@is_file($file)) {
+            return $file;
+        }
+    }
+    return null;
+}
+
 function config(?string $key = null, mixed $default = null): mixed
 {
     static $cfg = null;
     if ($cfg === null) {
-        $file = ROOT . '/config.php';
-        $cfg = is_file($file) ? (array)require $file : [];
+        $file = config_path();
+        $cfg = $file !== null ? (array)require $file : [];
     }
     if ($key === null) {
         return $cfg;
@@ -91,12 +107,19 @@ function config(?string $key = null, mixed $default = null): mixed
 
 function is_installed(): bool
 {
-    return is_file(ROOT . '/config.php') && is_file(ROOT . '/data/installed.lock');
+    return config_path() !== null && is_file(ROOT . '/data/installed.lock');
+}
+
+/** Folder for private runtime files (logs): PRIVATE_DIR when the config lives there, otherwise data/ (web access denied). */
+function private_storage_dir(): string
+{
+    $cfg = config_path();
+    return ($cfg !== null && str_starts_with($cfg, PRIVATE_DIR)) ? PRIVATE_DIR : ROOT . '/data';
 }
 
 /* ------------------------------------------------------------ database */
 
-function make_pdo(array $c): PDO
+function make_pdo(#[\SensitiveParameter] array $c): PDO
 {
     $opts = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -105,6 +128,9 @@ function make_pdo(array $c): PDO
     ];
     if (($c['driver'] ?? 'mysql') === 'sqlite') {
         $path = $c['path'] ?? (ROOT . '/data/eagles.sqlite');
+        if (!preg_match('#^([A-Za-z]:)?[\\\\/]#', $path)) {
+            $path = ROOT . '/' . $path; // relative paths are relative to the site folder
+        }
         $pdo = new PDO('sqlite:' . $path, null, null, $opts);
         $pdo->exec('PRAGMA foreign_keys = ON');
         return $pdo;
@@ -335,6 +361,70 @@ function require_admin(): array
     return $u;
 }
 
+/* ------------------------------------------------- login rate limiting */
+
+const LOGIN_WINDOW_SECONDS = 900; // failures older than 15 minutes no longer count
+const LOGIN_MAX_PER_IP     = 5;   // failed attempts from one IP inside the window
+const LOGIN_MAX_PER_USER   = 10;  // failed attempts on one username (from any IP) inside the window
+
+/** Only REMOTE_ADDR is trusted; forwarded headers can be forged by the client. */
+function client_ip(): string
+{
+    return substr((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 45);
+}
+
+function normalize_login_name(string $username): string
+{
+    return mb_strtolower(mb_substr(trim($username), 0, 60));
+}
+
+/** Creates the login_attempts table on installs made before it existed. */
+function login_attempts_ready(): void
+{
+    static $ready = false;
+    if ($ready) {
+        return;
+    }
+    try {
+        db()->query('SELECT 1 FROM login_attempts LIMIT 1');
+    } catch (PDOException) {
+        require_once __DIR__ . '/schema.php';
+        install_schema(db(), db_driver());
+    }
+    $ready = true;
+}
+
+function login_is_throttled(string $username): bool
+{
+    login_attempts_ready();
+    $since = date('Y-m-d H:i:s', time() - LOGIN_WINDOW_SECONDS);
+    $byIp = db()->prepare('SELECT COUNT(*) FROM login_attempts WHERE ip = ? AND attempted_at >= ?');
+    $byIp->execute([client_ip(), $since]);
+    if ((int)$byIp->fetchColumn() >= LOGIN_MAX_PER_IP) {
+        return true;
+    }
+    $byUser = db()->prepare('SELECT COUNT(*) FROM login_attempts WHERE username = ? AND attempted_at >= ?');
+    $byUser->execute([normalize_login_name($username), $since]);
+    return (int)$byUser->fetchColumn() >= LOGIN_MAX_PER_USER;
+}
+
+function record_failed_login(string $username): void
+{
+    login_attempts_ready();
+    db()->prepare('INSERT INTO login_attempts (ip, username, attempted_at) VALUES (?, ?, ?)')
+        ->execute([client_ip(), normalize_login_name($username), now()]);
+    // housekeeping: keep the table small
+    db()->prepare('DELETE FROM login_attempts WHERE attempted_at < ?')
+        ->execute([date('Y-m-d H:i:s', time() - 86400)]);
+}
+
+function clear_login_attempts(string $username): void
+{
+    login_attempts_ready();
+    db()->prepare('DELETE FROM login_attempts WHERE ip = ? OR username = ?')
+        ->execute([client_ip(), normalize_login_name($username)]);
+}
+
 /* ------------------------------------------------------------ uploads */
 
 /** Normalises a multi-file $_FILES entry into a list of single-file arrays. */
@@ -448,17 +538,25 @@ function delete_upload(?string $path): void
     }
 }
 
+/* ------------------------------------------------------ error handling */
+
+// Errors are always logged, never shown to visitors (unless 'debug' => true on a dev machine).
+error_reporting(E_ALL);
+ini_set('log_errors', '1');
+ini_set('zend.exception_ignore_args', '1'); // stack traces in the log never contain argument values (passwords, tokens)
+ini_set('display_errors', config('debug') ? '1' : '0');
+ini_set('display_startup_errors', config('debug') ? '1' : '0');
+(function (): void {
+    $dir = private_storage_dir() . '/logs';
+    if ((@is_dir($dir) || @mkdir($dir, 0700, true)) && @is_writable($dir)) {
+        ini_set('error_log', $dir . '/php-error.log');
+    } // otherwise the host's default PHP error log is used
+})();
+
 /* ------------------------------------------------------------- guards */
 
 if (PHP_SAPI !== 'cli' && !defined('INSTALLER') && !is_installed()) {
     redirect('install.php');
-}
-
-if (config('debug')) {
-    ini_set('display_errors', '1');
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', '0');
 }
 
 require __DIR__ . '/icons.php';

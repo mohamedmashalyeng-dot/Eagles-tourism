@@ -10,27 +10,26 @@ if (current_admin()) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    $_SESSION['login_attempts'] = $_SESSION['login_attempts'] ?? [];
-    $_SESSION['login_attempts'] = array_filter($_SESSION['login_attempts'], fn($t) => $t > time() - 900);
+    $username = trim((string)($_POST['username'] ?? ''));
+    $password = (string)($_POST['password'] ?? '');
 
-    if (count($_SESSION['login_attempts']) >= 5) {
+    // Rate limit is stored in the database (per IP and per username), so clearing cookies does not reset it.
+    if (login_is_throttled($username)) {
         $error = 'محاولات كثيرة خاطئة. حاول مرة أخرى بعد 15 دقيقة.';
     } else {
-        $username = trim((string)($_POST['username'] ?? ''));
-        $password = (string)($_POST['password'] ?? '');
         $st = db()->prepare('SELECT * FROM users WHERE username = ?');
         $st->execute([$username]);
         $user = $st->fetch();
         if ($user && password_verify($password, $user['password_hash'])) {
             session_regenerate_id(true);
             $_SESSION['admin_id'] = (int)$user['id'];
-            unset($_SESSION['login_attempts']);
+            clear_login_attempts($username);
             if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
                 db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([password_hash($password, PASSWORD_DEFAULT), $user['id']]);
             }
             redirect('admin/index.php');
         }
-        $_SESSION['login_attempts'][] = time();
+        record_failed_login($username);
         usleep(600000);
         $error = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
     }

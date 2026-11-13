@@ -74,7 +74,21 @@ function install_schema(PDO $pdo, string $driver): void
             status VARCHAR(20) NOT NULL DEFAULT 'new',
             created_at DATETIME NOT NULL
         )$engine",
+        // Failed admin logins, used for server-side rate limiting (see login_is_throttled()).
+        "CREATE TABLE IF NOT EXISTS login_attempts (
+            id $id,
+            ip VARCHAR(45) NOT NULL,
+            username VARCHAR(60) NOT NULL DEFAULT '',
+            attempted_at DATETIME NOT NULL"
+            . ($driver === 'sqlite' ? '' : ",
+            INDEX idx_login_ip (ip, attempted_at),
+            INDEX idx_login_user (username, attempted_at)") . "
+        )$engine",
     ];
+    if ($driver === 'sqlite') {
+        $sql[] = 'CREATE INDEX IF NOT EXISTS idx_login_ip ON login_attempts (ip, attempted_at)';
+        $sql[] = 'CREATE INDEX IF NOT EXISTS idx_login_user ON login_attempts (username, attempted_at)';
+    }
     foreach ($sql as $q) {
         $pdo->exec($q);
     }

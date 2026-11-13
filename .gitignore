@@ -1,6 +1,8 @@
 /config.php
 /data/*.sqlite
 /data/installed.lock
+/data/install-*.key
+/data/logs/
 /uploads/**/*
 !/uploads/.htaccess
 !/uploads/*/
