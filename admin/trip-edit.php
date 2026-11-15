@@ -147,7 +147,7 @@ admin_header($id ? 'تعديل رحلة' : 'إضافة رحلة جديدة', 'tr
                     <select name="category"><?php foreach (TRIP_CATEGORIES as $k => $l): ?><option value="<?= e($k) ?>" <?= $trip['category'] === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select>
                 </div>
                 <div class="field"><label>المكان</label><input name="location" value="<?= e($trip['location']) ?>" placeholder="مثال: جزيرة الجفتون"></div>
-                <div class="field"><label>مدة الرحلة</label><input name="duration" value="<?= e($trip['duration']) ?>" placeholder="مثال: 8 ساعات"></div>
+                <div class="field"><label>مدة الرحلة</label><input name="duration" value="<?= e($trip['duration']) ?>" placeholder="مثال: 8 ساعات أو 60 دقيقة"></div>
                 <div class="field"><label>موعد الاستلام</label><input name="pickup_time" value="<?= e($trip['pickup_time']) ?>" placeholder="مثال: 8:00 صباحاً من الفندق"></div>
                 <div class="field"><label>حجم المجموعة</label><input name="group_size" value="<?= e($trip['group_size']) ?>" placeholder="مثال: حتى 30 فرد"></div>
             </div>

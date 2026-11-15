@@ -18,6 +18,8 @@ const TRIP_CATEGORIES = [
     'day'    => 'رحلات اليوم الواحد',
     'city'   => 'جولات المدينة',
     'family' => 'عائلية ومغامرات',
+    'massage' => 'مساج',
+    'hammam' => 'حمام تركي',
 ];
 
 const BOOKING_STATUSES = [
@@ -160,7 +162,7 @@ const DEFAULT_SETTINGS = [
     'stat_rating'    => '4.9',
     'stat_years'     => '10',
     'testimonials'   => "أحمد م. | القاهرة | رحلة أورانج باي كانت رائعة، التنظيم ممتاز والمواعيد مضبوطة والأكل جميل جداً.\nسارة ك. | الإسكندرية | السفاري كانت تجربة مختلفة تماماً، الأطفال استمتعوا جداً بالجمال والعرض.\nDaniel R. | Germany | Great diving experience for beginners. The instructor was patient and professional.",
-    'meta_description' => 'إيجلز للسياحة - أفضل الرحلات البحرية والسفاري والغوص في الغردقة بأسعار مميزة وخدمة احترافية.',
+    'meta_description' => 'إيجلز للسياحة - أفضل الرحلات البحرية والسفاري والغوص والمساج والحمام التركي في الغردقة بأسعار مميزة وخدمة احترافية.',
 ];
 
 function settings(): array
@@ -235,6 +237,12 @@ function whatsapp_link(string $message = ''): string
 {
     $num = preg_replace('/\D+/', '', setting('whatsapp'));
     return 'https://wa.me/' . $num . ($message !== '' ? '?text=' . rawurlencode($message) : '');
+}
+
+/** Spa services are counted as sessions, not trips. */
+function category_unit(?string $key): string
+{
+    return in_array($key, ['massage', 'hammam'], true) ? 'جلسة' : 'رحلة';
 }
 
 function category_label(?string $key): string

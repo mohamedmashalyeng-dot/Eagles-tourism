@@ -66,6 +66,7 @@ $rel = db()->prepare('SELECT * FROM trips WHERE is_active = 1 AND id <> ? ORDER 
 $rel->execute([$id, $trip['category']]);
 $related = $rel->fetchAll();
 
+$isSpa     = category_unit($trip['category']) === 'جلسة';
 $includes  = lines($trip['includes']);
 $excludes  = lines($trip['excludes']);
 $itinerary = lines($trip['itinerary']);
@@ -104,7 +105,7 @@ $waMsg = "مرحباً، أريد حجز رحلة: {$trip['title']}";
             </ul>
 
             <div class="trip-block">
-                <h2>عن الرحلة</h2>
+                <h2><?= $isSpa ? 'عن الجلسة' : 'عن الرحلة' ?></h2>
                 <div class="prose"><?= nl2br(e($trip['description'] ?: $trip['short_description'])) ?></div>
             </div>
 
@@ -127,7 +128,7 @@ $waMsg = "مرحباً، أريد حجز رحلة: {$trip['title']}";
 
             <?php if ($itinerary): ?>
             <div class="trip-block">
-                <h2>برنامج الرحلة</h2>
+                <h2><?= $isSpa ? 'تفاصيل الجلسة' : 'برنامج الرحلة' ?></h2>
                 <ol class="timeline">
                     <?php foreach ($itinerary as $step):
                         $time = ''; $text = $step;
@@ -142,7 +143,7 @@ $waMsg = "مرحباً، أريد حجز رحلة: {$trip['title']}";
         <aside class="trip-aside" id="book">
             <div class="book-card">
                 <div class="book-card__price">
-                    <small>سعر الفرد</small>
+                    <small><?= $isSpa ? 'سعر الجلسة للفرد' : 'سعر الفرد' ?></small>
                     <div>
                         <?php if ((float)$trip['old_price'] > (float)$trip['price_adult']): ?><del><?= e(price($trip['old_price'])) ?></del><?php endif; ?>
                         <strong><?= e(price($trip['price_adult'])) ?></strong>
@@ -159,7 +160,7 @@ $waMsg = "مرحباً، أريد حجز رحلة: {$trip['title']}";
                         <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($msg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> أرسل على واتساب</a>
                     </div>
                 <?php else: ?>
-                    <h3 class="book-card__title">احجز رحلتك الآن</h3>
+                    <h3 class="book-card__title"><?= $isSpa ? 'احجز جلستك الآن' : 'احجز رحلتك الآن' ?></h3>
                     <?php foreach ($errors as $err): ?><div class="alert alert-error"><?= e($err) ?></div><?php endforeach; ?>
                     <form method="post" action="<?= e(base_url('trip.php?id=' . $id)) ?>#book" class="form book-form" id="bookForm"
                           data-adult="<?= e((float)$trip['price_adult']) ?>" data-child="<?= e((float)$trip['price_child']) ?>" data-currency="<?= e(setting('currency', 'ج.م')) ?>">
@@ -167,7 +168,7 @@ $waMsg = "مرحباً، أريد حجز رحلة: {$trip['title']}";
                         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
                         <div class="field"><label for="bName">الاسم بالكامل</label><input id="bName" name="name" required value="<?= e(old('name')) ?>"></div>
                         <div class="field"><label for="bPhone">رقم الهاتف / واتساب</label><input id="bPhone" name="phone" type="tel" dir="ltr" required value="<?= e(old('phone')) ?>" placeholder="+20 1xx xxx xxxx"></div>
-                        <div class="field"><label for="bDate">تاريخ الرحلة</label><input id="bDate" name="travel_date" type="date" required min="<?= date('Y-m-d') ?>" value="<?= e(old('travel_date')) ?>"></div>
+                        <div class="field"><label for="bDate">التاريخ</label><input id="bDate" name="travel_date" type="date" required min="<?= date('Y-m-d') ?>" value="<?= e(old('travel_date')) ?>"></div>
                         <div class="grid-2">
                             <div class="field"><label for="bAdults">البالغين</label><input id="bAdults" name="adults" type="number" min="1" max="100" value="<?= e(old('adults', '2')) ?>"></div>
                             <div class="field"><label for="bChildren">الأطفال</label><input id="bChildren" name="children" type="number" min="0" max="100" value="<?= e(old('children', '0')) ?>"></div>

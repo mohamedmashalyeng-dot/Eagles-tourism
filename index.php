@@ -14,7 +14,7 @@ $activeNav = 'home';
 $ogImage = setting('hero_image');
 require __DIR__ . '/includes/header.php';
 
-$catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' => 'award', 'city' => 'pin', 'family' => 'heart'];
+$catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' => 'award', 'city' => 'pin', 'family' => 'heart', 'massage' => 'feather', 'hammam' => 'droplet'];
 ?>
 
 <section class="hero" style="--bg:url('<?= e(img_src(setting('hero_image'))) ?>')">
@@ -29,7 +29,7 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
         <form class="hero-search" action="<?= e(base_url('trips.php')) ?>" method="get" role="search">
             <label class="hero-search__field">
                 <?= icon('search') ?>
-                <input type="search" name="q" placeholder="ابحث عن رحلة... (مثال: أورانج باي، سفاري، غوص)" aria-label="بحث عن رحلة">
+                <input type="search" name="q" placeholder="ابحث عن رحلة أو خدمة... (مثال: أورانج باي، سفاري، مساج)" aria-label="بحث عن رحلة">
             </label>
             <label class="hero-search__field hero-search__select">
                 <?= icon('compass') ?>
@@ -86,7 +86,7 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
                 <a class="cat-card" href="<?= e(base_url('trips.php?cat=' . $k)) ?>">
                     <span class="cat-card__icon"><?= icon($catIcons[$k] ?? 'compass') ?></span>
                     <strong><?= e($label) ?></strong>
-                    <small><?= (int)($catCounts[$k] ?? 0) ?> رحلة</small>
+                    <small><?= (int)($catCounts[$k] ?? 0) ?> <?= e(category_unit($k)) ?></small>
                 </a>
             <?php endforeach; ?>
         </div>
