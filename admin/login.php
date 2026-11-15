@@ -42,8 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>تسجيل الدخول | لوحة التحكم</title>
-    <link rel="icon" href="<?= e(base_url('assets/img/favicon.svg')) ?>" type="image/svg+xml">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="<?= e(base_url('assets/img/favicon.png')) ?>" type="image/png">
+    <link rel="apple-touch-icon" href="<?= e(base_url('assets/img/apple-touch-icon.png')) ?>">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 </head>
 <body class="auth-page">

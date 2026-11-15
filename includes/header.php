@@ -23,10 +23,11 @@ $nav = [
     <meta property="og:type" content="website">
     <?php if (!empty($ogImage)): ?><meta property="og:image" content="<?= e(img_src($ogImage)) ?>"><?php endif; ?>
     <meta name="theme-color" content="#0b2545">
-    <link rel="icon" href="<?= e(base_url('assets/img/favicon.svg')) ?>" type="image/svg+xml">
+    <link rel="icon" href="<?= e(base_url('assets/img/favicon.png')) ?>" type="image/png">
+    <link rel="apple-touch-icon" href="<?= e(base_url('assets/img/apple-touch-icon.png')) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 </head>
 <body>

@@ -41,11 +41,8 @@ function icon(string $name, string $class = 'icon'): string
     return '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $inner . '</svg>';
 }
 
-/** Brand mark: stylised eagle wings over a rising sun. */
+/** Brand mark: the Eagles gold eagle logo. */
 function brand_mark(string $class = 'brand-mark'): string
 {
-    return '<svg class="' . e($class) . '" viewBox="0 0 64 40" aria-hidden="true">'
-        . '<circle cx="32" cy="12" r="7" fill="var(--gold)"/>'
-        . '<path fill="currentColor" d="M1 16c9-7 18-8 26-3l5 7 5-7c8-5 17-4 26 3-8-1-15 1-20 6l-11 13-11-13C16 17 9 15 1 16z"/>'
-        . '</svg>';
+    return '<img class="' . e($class) . '" src="' . e(base_url('assets/img/logo-mark.png')) . '" alt="" width="240" height="264" decoding="async">';
 }
