@@ -35,17 +35,16 @@ function icon(string $name, string $class = 'icon'): string
         'sun'      => '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
         'external' => '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
         'search'   => '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+        'feather'  => '<path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>',
+        'droplet'  => '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
         'lock'     => '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     ];
     $inner = $paths[$name] ?? '';
     return '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $inner . '</svg>';
 }
 
-/** Brand mark: stylised eagle wings over a rising sun. */
+/** Brand mark: the Eagles gold eagle logo. */
 function brand_mark(string $class = 'brand-mark'): string
 {
-    return '<svg class="' . e($class) . '" viewBox="0 0 64 40" aria-hidden="true">'
-        . '<circle cx="32" cy="12" r="7" fill="var(--gold)"/>'
-        . '<path fill="currentColor" d="M1 16c9-7 18-8 26-3l5 7 5-7c8-5 17-4 26 3-8-1-15 1-20 6l-11 13-11-13C16 17 9 15 1 16z"/>'
-        . '</svg>';
+    return '<img class="' . e($class) . '" src="' . e(base_url('assets/img/logo-mark.png')) . '" alt="" width="240" height="264" decoding="async">';
 }

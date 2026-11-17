@@ -54,7 +54,7 @@ echo page_banner($pageTitle, 'اختر رحلتك من بين أفضل الرح�
             </div>
         </form>
 
-        <p class="results-count"><?= count($trips) ?> رحلة<?= $q !== '' ? ' لنتيجة البحث "' . e($q) . '"' : '' ?></p>
+        <p class="results-count"><?= count($trips) ?> <?= e(category_unit($cat)) ?><?= $q !== '' ? ' لنتيجة البحث "' . e($q) . '"' : '' ?></p>
 
         <?php if ($trips): ?>
             <div class="trip-grid">
