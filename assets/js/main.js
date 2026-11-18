@@ -22,6 +22,14 @@
         });
     }
 
+    /* Language menu: close when clicking outside */
+    var langSwitch = document.querySelector('.lang-switch');
+    if (langSwitch) {
+        document.addEventListener('click', function (e) {
+            if (langSwitch.open && !langSwitch.contains(e.target)) langSwitch.open = false;
+        });
+    }
+
     /* Booking total */
     var form = document.getElementById('bookForm');
     if (form) {
@@ -71,8 +79,9 @@
         document.addEventListener('keydown', function (e) {
             if (lb.hidden) return;
             if (e.key === 'Escape') close();
-            if (e.key === 'ArrowLeft') show(idx + 1);
-            if (e.key === 'ArrowRight') show(idx - 1);
+            var rtl = document.documentElement.dir === 'rtl';
+            if (e.key === 'ArrowLeft') show(idx + (rtl ? 1 : -1));
+            if (e.key === 'ArrowRight') show(idx + (rtl ? -1 : 1));
         });
         img.addEventListener('error', function () { if (lb.dataset.placeholder && img.src.indexOf('placeholder') < 0) img.src = lb.dataset.placeholder; });
     }

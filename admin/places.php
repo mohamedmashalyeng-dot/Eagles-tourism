@@ -10,6 +10,7 @@ if ($editId) {
     $st->execute([$editId]);
     $place = $st->fetch() ?: $place;
 }
+$translations = load_translations('place_translations', 'place_id', (int)$place['id']);
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
@@ -65,11 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         } else {
             $pdo->prepare('INSERT INTO places (name, description, image, is_active, sort_order, created_at) VALUES (?,?,?,?,?,?)')
                 ->execute([$name, $desc, $image, $active, $order, now()]);
+            $id = (int)$pdo->lastInsertId();
         }
+        save_translations('place_translations', 'place_id', $id, PLACE_I18N_FIELDS, (array)($_POST['tr'] ?? []), ['name' => 150, 'description' => 1000]);
         flash('success', 'تم حفظ المكان بنجاح.');
         redirect('admin/places.php');
     }
     $place = ['id' => $id, 'name' => $name, 'description' => $desc, 'image' => $image, 'is_active' => $active, 'sort_order' => $order];
+    $translations = (array)($_POST['tr'] ?? []);
 }
 
 $places = $pdo->query('SELECT * FROM places ORDER BY sort_order ASC, id DESC')->fetchAll();
@@ -115,6 +119,7 @@ admin_header('معالم الغردقة', 'places');
             <div class="field"><label>أو رابط صورة</label><input name="image_url" dir="ltr" placeholder="https://..." value="<?= preg_match('#^https?://#', (string)$place['image']) ? e($place['image']) : '' ?>"></div>
             <div class="field"><label>اسم المكان *</label><input name="name" required value="<?= e($place['name']) ?>" placeholder="مثال: جزيرة الجفتون"></div>
             <div class="field"><label>وصف قصير</label><textarea name="description" rows="3" maxlength="600"><?= e($place['description']) ?></textarea></div>
+            <?= translations_panel('', ['name' => ['اسم المكان', 'input'], 'description' => ['وصف قصير', 'short']], $translations, true) ?>
             <div class="grid-2">
                 <div class="field"><label>الترتيب</label><input type="number" name="sort_order" value="<?= (int)$place['sort_order'] ?>"></div>
                 <label class="check check--inline"><input type="checkbox" name="is_active" <?= $place['is_active'] ? 'checked' : '' ?>> ظاهر</label>

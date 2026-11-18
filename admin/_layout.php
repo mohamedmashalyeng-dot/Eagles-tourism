@@ -3,6 +3,46 @@
 require_once dirname(__DIR__) . '/includes/bootstrap.php';
 header('X-Robots-Tag: noindex, nofollow');
 
+/**
+ * Collapsible per-language fields (English / Russian / Spanish) posted as tr[lang][field].
+ * $labels: field => [label, type] with type input | short | long | list.
+ */
+function translations_panel(string $title, array $labels, array $values, bool $compact = false, string $hint = ''): string
+{
+    ob_start(); ?>
+    <<?= $compact ? 'div' : 'section' ?> class="<?= $compact ? 'tr-compact' : 'panel' ?>">
+        <?php if ($title !== ''): ?><h2 class="panel__title"><?= e($title) ?> <small>(اختياري — الخانة الفاضية بتعرض النص العربي)</small></h2><?php endif; ?>
+        <?php if ($hint !== ''): ?><p class="hint"><?= e($hint) ?></p><?php endif; ?>
+        <?php foreach (LANGS as $code => $info): if ($code === DEFAULT_LANG) continue;
+            $v = (array)($values[$code] ?? []);
+            $filled = count(array_filter(array_map(fn($f) => trim((string)($v[$f] ?? '')), array_keys($labels)), fn($x) => $x !== ''));
+        ?>
+            <details class="tr-lang">
+                <summary>
+                    <strong><?= e($info['name']) ?></strong>
+                    <em class="tr-state <?= $filled ? 'is-done' : '' ?>"><?= $filled ? 'مترجم ' . $filled . '/' . count($labels) : 'غير مترجم' ?></em>
+                </summary>
+                <div class="tr-fields" dir="ltr" lang="<?= e($code) ?>">
+                    <?php foreach ($labels as $field => [$label, $type]):
+                        $name = 'tr[' . $code . '][' . $field . ']';
+                        $val = (string)($v[$field] ?? ''); ?>
+                        <div class="field <?= $type === 'input' ? '' : 'span-2' ?>">
+                            <label dir="rtl"><?= e($label) ?></label>
+                            <?php if ($type === 'input'): ?>
+                                <input name="<?= e($name) ?>" value="<?= e($val) ?>">
+                            <?php else: ?>
+                                <textarea name="<?= e($name) ?>" rows="<?= $type === 'short' ? 2 : ($type === 'long' ? 6 : 4) ?>"><?= e($val) ?></textarea>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </details>
+        <?php endforeach; ?>
+    </<?= $compact ? 'div' : 'section' ?>>
+    <?php
+    return (string)ob_get_clean();
+}
+
 function admin_header(string $title, string $active = ''): void
 {
     $user = require_admin();

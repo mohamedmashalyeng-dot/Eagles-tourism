@@ -1,13 +1,13 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
-$places = db()->query('SELECT * FROM places WHERE is_active = 1 ORDER BY sort_order ASC, id DESC')->fetchAll();
+$places = localize_places(db()->query('SELECT * FROM places WHERE is_active = 1 ORDER BY sort_order ASC, id DESC')->fetchAll());
 
-$pageTitle = 'معالم الغردقة';
-$pageDesc  = 'صور لأجمل الأماكن والمعالم السياحية في الغردقة والبحر الأحمر: الجزر، الشعاب المرجانية، الصحراء، والمارينا.';
+$pageTitle = t('معالم الغردقة');
+$pageDesc  = t('صور لأجمل الأماكن والمعالم السياحية في الغردقة والبحر الأحمر: الجزر، الشعاب المرجانية، الصحراء، والمارينا.');
 $activeNav = 'gallery';
 require __DIR__ . '/includes/header.php';
-echo page_banner('معالم الغردقة', 'جولة مصورة في أجمل أماكن الغردقة والبحر الأحمر', $places[0]['image'] ?? null);
+echo page_banner($pageTitle, t('جولة مصورة في أجمل أماكن الغردقة والبحر الأحمر'), $places[0]['image'] ?? null);
 ?>
 <section class="section">
     <div class="container">
@@ -27,15 +27,15 @@ echo page_banner('معالم الغردقة', 'جولة مصورة في أجمل
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <p class="empty">سيتم إضافة صور المعالم قريباً.</p>
+            <p class="empty"><?= e(t('سيتم إضافة صور المعالم قريباً.')) ?></p>
         <?php endif; ?>
     </div>
 </section>
 
 <section class="cta-band">
     <div class="container cta-band__inner">
-        <div><h2>عايز تزور الأماكن دي؟</h2><p>اختار الرحلة المناسبة لك وإحنا نتولى الباقي.</p></div>
-        <a href="<?= e(base_url('trips.php')) ?>" class="btn btn-gold btn-lg">تصفح الرحلات <?= icon('arrow') ?></a>
+        <div><h2><?= e(t('عايز تزور الأماكن دي؟')) ?></h2><p><?= e(t('اختار الرحلة المناسبة لك وإحنا نتولى الباقي.')) ?></p></div>
+        <a href="<?= e(url('trips.php')) ?>" class="btn btn-gold btn-lg"><?= e(t('تصفح الرحلات')) ?> <?= icon('arrow') ?></a>
     </div>
 </section>
 <?php require __DIR__ . '/includes/footer.php'; ?>

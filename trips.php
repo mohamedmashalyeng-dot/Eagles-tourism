@@ -14,9 +14,11 @@ if (isset(TRIP_CATEGORIES[$cat])) {
     $cat = '';
 }
 if ($q !== '') {
-    $where[] = '(title LIKE ? OR short_description LIKE ? OR location LIKE ?)';
+    // search the Arabic text and every translation, so a visitor can type in any language
+    $where[] = '(title LIKE ? OR short_description LIKE ? OR location LIKE ?
+                 OR id IN (SELECT trip_id FROM trip_translations WHERE title LIKE ? OR short_description LIKE ? OR location LIKE ?))';
     $like = '%' . $q . '%';
-    array_push($params, $like, $like, $like);
+    array_push($params, $like, $like, $like, $like, $like, $like);
 }
 $order = match ($sort) {
     'price_asc'  => 'price_adult ASC',
@@ -26,35 +28,36 @@ $order = match ($sort) {
 };
 $st = db()->prepare('SELECT * FROM trips WHERE ' . implode(' AND ', $where) . ' ORDER BY ' . $order);
 $st->execute($params);
-$trips = $st->fetchAll();
+$trips = localize_trips($st->fetchAll());
 
-$pageTitle = $cat ? category_label($cat) : 'الرحلات';
+$pageTitle = $cat ? category_label($cat) : t('الرحلات');
 $activeNav = 'trips';
 require __DIR__ . '/includes/header.php';
-echo page_banner($pageTitle, 'اختر رحلتك من بين أفضل الرحلات البحرية والصحراوية والتاريخية في الغردقة');
+echo page_banner($pageTitle, t('اختر رحلتك من بين أفضل الرحلات البحرية والصحراوية والتاريخية في الغردقة'));
 ?>
 <section class="section">
     <div class="container">
         <form class="filters" method="get">
-            <div class="chips" role="tablist" aria-label="أنواع الرحلات">
-                <a class="chip <?= $cat === '' ? 'is-active' : '' ?>" href="<?= e(base_url('trips.php' . ($q !== '' ? '?q=' . rawurlencode($q) : ''))) ?>">الكل</a>
-                <?php foreach (TRIP_CATEGORIES as $k => $label): ?>
-                    <a class="chip <?= $cat === $k ? 'is-active' : '' ?>" href="<?= e(base_url('trips.php?cat=' . $k . ($q !== '' ? '&q=' . rawurlencode($q) : ''))) ?>"><?= e($label) ?></a>
+            <?php if (lang() !== DEFAULT_LANG): ?><input type="hidden" name="lang" value="<?= e(lang()) ?>"><?php endif; ?>
+            <div class="chips" role="tablist" aria-label="<?= e(t('أنواع الرحلات')) ?>">
+                <a class="chip <?= $cat === '' ? 'is-active' : '' ?>" href="<?= e(url('trips.php' . ($q !== '' ? '?q=' . rawurlencode($q) : ''))) ?>"><?= e(t('الكل')) ?></a>
+                <?php foreach (array_keys(TRIP_CATEGORIES) as $k): ?>
+                    <a class="chip <?= $cat === $k ? 'is-active' : '' ?>" href="<?= e(url('trips.php?cat=' . $k . ($q !== '' ? '&q=' . rawurlencode($q) : ''))) ?>"><?= e(category_label($k)) ?></a>
                 <?php endforeach; ?>
             </div>
             <div class="filters__right">
                 <?php if ($cat): ?><input type="hidden" name="cat" value="<?= e($cat) ?>"><?php endif; ?>
-                <label class="search-input"><?= icon('search') ?><input type="search" name="q" value="<?= e($q) ?>" placeholder="ابحث عن رحلة"></label>
-                <select name="sort" onchange="this.form.submit()" aria-label="ترتيب">
-                    <option value="">الأكثر طلباً</option>
-                    <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>السعر: الأقل أولاً</option>
-                    <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>السعر: الأعلى أولاً</option>
-                    <option value="new" <?= $sort === 'new' ? 'selected' : '' ?>>الأحدث</option>
+                <label class="search-input"><?= icon('search') ?><input type="search" name="q" value="<?= e($q) ?>" placeholder="<?= e(t('ابحث عن رحلة')) ?>"></label>
+                <select name="sort" onchange="this.form.submit()" aria-label="<?= e(t('ترتيب')) ?>">
+                    <option value=""><?= e(t('الأكثر طلباً')) ?></option>
+                    <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>><?= e(t('السعر: الأقل أولاً')) ?></option>
+                    <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>><?= e(t('السعر: الأعلى أولاً')) ?></option>
+                    <option value="new" <?= $sort === 'new' ? 'selected' : '' ?>><?= e(t('الأحدث')) ?></option>
                 </select>
             </div>
         </form>
 
-        <p class="results-count"><?= count($trips) ?> <?= e(category_unit($cat)) ?><?= $q !== '' ? ' لنتيجة البحث "' . e($q) . '"' : '' ?></p>
+        <p class="results-count"><?= e(category_count(count($trips), $cat)) ?><?= $q !== '' ? ' ' . e(t('لنتيجة البحث "{q}"', ['q' => $q])) : '' ?></p>
 
         <?php if ($trips): ?>
             <div class="trip-grid">
@@ -63,9 +66,9 @@ echo page_banner($pageTitle, 'اختر رحلتك من بين أفضل الرح�
         <?php else: ?>
             <div class="empty">
                 <?= icon('search', 'icon icon-xl') ?>
-                <h3>لا توجد رحلات مطابقة</h3>
-                <p>جرّب بحثاً آخر أو تواصل معنا وسنرتب لك الرحلة التي تريدها.</p>
-                <a href="<?= e(base_url('trips.php')) ?>" class="btn btn-primary">عرض كل الرحلات</a>
+                <h3><?= e(t('لا توجد رحلات مطابقة')) ?></h3>
+                <p><?= e(t('جرّب بحثاً آخر أو تواصل معنا وسنرتب لك الرحلة التي تريدها.')) ?></p>
+                <a href="<?= e(url('trips.php')) ?>" class="btn btn-primary"><?= e(t('عرض كل الرحلات')) ?></a>
             </div>
         <?php endif; ?>
     </div>

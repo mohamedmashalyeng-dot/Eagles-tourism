@@ -84,6 +84,31 @@ function install_schema(PDO $pdo, string $driver): void
             INDEX idx_login_ip (ip, attempted_at),
             INDEX idx_login_user (username, attempted_at)") . "
         )$engine",
+        // Translations of trips and places (en / ru / es). Arabic stays in the main tables.
+        "CREATE TABLE IF NOT EXISTS trip_translations (
+            trip_id $fk NOT NULL,
+            lang VARCHAR(5) NOT NULL,
+            title VARCHAR(200) NOT NULL DEFAULT '',
+            short_description VARCHAR(1000) NOT NULL DEFAULT '',
+            description TEXT,
+            duration VARCHAR(100) NOT NULL DEFAULT '',
+            location VARCHAR(150) NOT NULL DEFAULT '',
+            pickup_time VARCHAR(100) NOT NULL DEFAULT '',
+            group_size VARCHAR(100) NOT NULL DEFAULT '',
+            includes TEXT,
+            excludes TEXT,
+            itinerary TEXT,
+            PRIMARY KEY (trip_id, lang),
+            FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+        )$engine",
+        "CREATE TABLE IF NOT EXISTS place_translations (
+            place_id $fk NOT NULL,
+            lang VARCHAR(5) NOT NULL,
+            name VARCHAR(150) NOT NULL DEFAULT '',
+            description VARCHAR(1000) NOT NULL DEFAULT '',
+            PRIMARY KEY (place_id, lang),
+            FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+        )$engine",
     ];
     if ($driver === 'sqlite') {
         $sql[] = 'CREATE INDEX IF NOT EXISTS idx_login_ip ON login_attempts (ip, attempted_at)';
@@ -235,5 +260,37 @@ function seed_sample_content(PDO $pdo): void
     $p = $pdo->prepare('INSERT INTO places (name, description, image, is_active, sort_order, created_at) VALUES (?,?,?,1,?,?)');
     foreach ($places as $i => [$name, $desc, $image]) {
         $p->execute([$name, $desc, $image, $i + 1, $now]);
+    }
+    seed_content_translations($pdo);
+}
+
+/**
+ * Adds the built-in English / Russian / Spanish translations of the demo trips and places
+ * (matched by their Arabic title / name). Rows that already have a translation are left alone.
+ */
+function seed_content_translations(PDO $pdo): void
+{
+    $data = require __DIR__ . '/seed_translations.php';
+    $jobs = [
+        ['trips', 'title', 'trip_translations', 'trip_id', TRIP_I18N_FIELDS, $data['trips']],
+        ['places', 'name', 'place_translations', 'place_id', PLACE_I18N_FIELDS, $data['places']],
+    ];
+    foreach ($jobs as [$table, $keyCol, $trTable, $fk, $fields, $byArabic]) {
+        $has = $pdo->prepare("SELECT COUNT(*) FROM $trTable WHERE $fk = ? AND lang = ?");
+        $cols = implode(', ', $fields);
+        $ins = $pdo->prepare("INSERT INTO $trTable ($fk, lang, $cols) VALUES (" . implode(', ', array_fill(0, count($fields) + 2, '?')) . ')');
+        foreach ($pdo->query("SELECT id, $keyCol FROM $table")->fetchAll() as $row) {
+            foreach ($byArabic[trim((string)$row[$keyCol])] ?? [] as $lang => $tr) {
+                $has->execute([$row['id'], $lang]);
+                if ((int)$has->fetchColumn() > 0) {
+                    continue;
+                }
+                try {
+                    $ins->execute([$row['id'], $lang, ...array_map(fn($f) => (string)($tr[$f] ?? ''), $fields)]);
+                } catch (PDOException) {
+                    // inserted by a parallel request
+                }
+            }
+        }
     }
 }

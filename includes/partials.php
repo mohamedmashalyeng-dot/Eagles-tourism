@@ -9,16 +9,17 @@ function img_tag(?string $path, string $alt, string $class = '', string $extra =
         . ' loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' . $fallback . '\'" ' . $extra . '>';
 }
 
+/** @param array $t a trip row already passed through localize_trips() */
 function trip_card(array $t): string
 {
-    $url = e(base_url('trip.php?id=' . (int)$t['id']));
+    $url = e(url('trip.php?id=' . (int)$t['id']));
     ob_start(); ?>
     <article class="trip-card">
         <a href="<?= $url ?>" class="trip-card__media">
             <?= img_tag($t['cover_image'], $t['title']) ?>
             <span class="trip-card__cat"><?= e(category_label($t['category'])) ?></span>
             <?php if ((float)$t['old_price'] > (float)$t['price_adult']): ?>
-                <span class="trip-card__badge">خصم <?= (int)round(100 - ((float)$t['price_adult'] / (float)$t['old_price']) * 100) ?>%</span>
+                <span class="trip-card__badge"><?= e(t('خصم {n}%', ['n' => (int)round(100 - ((float)$t['price_adult'] / (float)$t['old_price']) * 100)])) ?></span>
             <?php endif; ?>
         </a>
         <div class="trip-card__body">
@@ -30,11 +31,11 @@ function trip_card(array $t): string
             <p class="trip-card__text"><?= e(excerpt($t['short_description'], 110)) ?></p>
             <div class="trip-card__foot">
                 <div class="trip-card__price">
-                    <small>يبدأ من</small>
+                    <small><?= e(t('يبدأ من')) ?></small>
                     <?php if ((float)$t['old_price'] > (float)$t['price_adult']): ?><del><?= e(price($t['old_price'])) ?></del><?php endif; ?>
                     <strong><?= e(price($t['price_adult'])) ?></strong>
                 </div>
-                <a href="<?= $url ?>" class="btn btn-sm btn-outline">التفاصيل <?= icon('arrow') ?></a>
+                <a href="<?= $url ?>" class="btn btn-sm btn-outline"><?= e(t('التفاصيل')) ?> <?= icon('arrow') ?></a>
             </div>
         </div>
     </article>
@@ -48,7 +49,7 @@ function page_banner(string $title, string $subtitle = '', ?string $image = null
     ob_start(); ?>
     <section class="page-banner" style="--bg:url('<?= e(img_src($img)) ?>')">
         <div class="container">
-            <nav class="crumbs" aria-label="مسار الصفحة"><a href="<?= e(base_url()) ?>">الرئيسية</a><span>/</span><span><?= e($title) ?></span></nav>
+            <nav class="crumbs" aria-label="<?= e(t('مسار الصفحة')) ?>"><a href="<?= e(url()) ?>"><?= e(t('الرئيسية')) ?></a><span>/</span><span><?= e($title) ?></span></nav>
             <h1><?= e($title) ?></h1>
             <?php if ($subtitle !== ''): ?><p><?= e($subtitle) ?></p><?php endif; ?>
         </div>

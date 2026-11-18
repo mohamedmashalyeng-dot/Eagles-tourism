@@ -19,6 +19,8 @@ if ($id) {
     }
     $trip = $found;
 }
+$translations = load_translations('trip_translations', 'trip_id', $id);
+$trLimits = ['title' => 200, 'short_description' => 1000, 'duration' => 100, 'location' => 150, 'pickup_time' => 100, 'group_size' => 100];
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
@@ -92,6 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
             $id = (int)$pdo->lastInsertId();
         }
 
+        save_translations('trip_translations', 'trip_id', $id, TRIP_I18N_FIELDS, (array)($_POST['tr'] ?? []), $trLimits);
+
         if ($oldCover !== $data['cover_image']) {
             delete_upload($oldCover);
         }
@@ -121,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         redirect('admin/trip-edit.php?id=' . $id);
     }
     $trip = array_merge($trip, $data, ['cover_url' => $coverUrl]);
+    $translations = (array)($_POST['tr'] ?? []);
 }
 
 $images = [];
@@ -164,6 +169,15 @@ admin_header($id ? 'تعديل رحلة' : 'إضافة رحلة جديدة', 'tr
             <div class="field"><label>برنامج الرحلة <small>(كل خطوة في سطر — يمكن البدء بالوقت مثل: 09:00 - الإبحار)</small></label>
                 <textarea name="itinerary" rows="7" placeholder="08:00 - الاستلام من الفندق&#10;09:00 - الإبحار من المارينا"><?= e($trip['itinerary']) ?></textarea></div>
         </section>
+
+        <?php
+        $trLabels = [
+            'title' => ['اسم الرحلة', 'input'], 'short_description' => ['وصف مختصر', 'short'], 'description' => ['تفاصيل الرحلة', 'long'],
+            'duration' => ['مدة الرحلة', 'input'], 'location' => ['المكان', 'input'], 'pickup_time' => ['موعد الاستلام', 'input'], 'group_size' => ['حجم المجموعة', 'input'],
+            'includes' => ['السعر يشمل (كل بند في سطر)', 'list'], 'excludes' => ['السعر لا يشمل (كل بند في سطر)', 'list'], 'itinerary' => ['برنامج الرحلة (كل خطوة في سطر)', 'list'],
+        ];
+        echo translations_panel('ترجمة الرحلة', $trLabels, $translations);
+        ?>
 
         <section class="panel">
             <h2 class="panel__title">صور الرحلة</h2>

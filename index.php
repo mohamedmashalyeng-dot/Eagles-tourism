@@ -2,8 +2,8 @@
 require __DIR__ . '/includes/bootstrap.php';
 
 $pdo = db();
-$featured = $pdo->query('SELECT * FROM trips WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC, id DESC LIMIT 6')->fetchAll();
-$places   = $pdo->query('SELECT * FROM places WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 9')->fetchAll();
+$featured = localize_trips($pdo->query('SELECT * FROM trips WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC, id DESC LIMIT 6')->fetchAll());
+$places   = localize_places($pdo->query('SELECT * FROM places WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 9')->fetchAll());
 $tripCount = (int)$pdo->query('SELECT COUNT(*) FROM trips WHERE is_active = 1')->fetchColumn();
 $catCounts = [];
 foreach ($pdo->query('SELECT category, COUNT(*) c FROM trips WHERE is_active = 1 GROUP BY category') as $r) {
@@ -19,26 +19,27 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
 
 <section class="hero" style="--bg:url('<?= e(img_src(setting('hero_image'))) ?>')">
     <div class="container hero__inner">
-        <span class="eyebrow"><?= icon('pin') ?> الغردقة · البحر الأحمر</span>
+        <span class="eyebrow"><?= icon('pin') ?> <?= e(t('الغردقة · البحر الأحمر')) ?></span>
         <h1 class="hero__title"><?= e(setting('hero_title')) ?></h1>
         <p class="hero__text"><?= e(setting('hero_subtitle')) ?></p>
         <div class="hero__actions">
-            <a href="<?= e(base_url('trips.php')) ?>" class="btn btn-gold btn-lg">تصفح الرحلات <?= icon('arrow') ?></a>
-            <a href="<?= e(whatsapp_link('مرحباً، أريد حجز رحلة في الغردقة')) ?>" class="btn btn-ghost btn-lg" target="_blank" rel="noopener"><?= icon('chat') ?> تواصل عبر واتساب</a>
+            <a href="<?= e(url('trips.php')) ?>" class="btn btn-gold btn-lg"><?= e(t('تصفح الرحلات')) ?> <?= icon('arrow') ?></a>
+            <a href="<?= e(whatsapp_link(t('مرحباً، أريد حجز رحلة في الغردقة'))) ?>" class="btn btn-ghost btn-lg" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('تواصل عبر واتساب')) ?></a>
         </div>
         <form class="hero-search" action="<?= e(base_url('trips.php')) ?>" method="get" role="search">
+            <?php if (lang() !== DEFAULT_LANG): ?><input type="hidden" name="lang" value="<?= e(lang()) ?>"><?php endif; ?>
             <label class="hero-search__field">
                 <?= icon('search') ?>
-                <input type="search" name="q" placeholder="ابحث عن رحلة أو خدمة... (مثال: أورانج باي، سفاري، مساج)" aria-label="بحث عن رحلة">
+                <input type="search" name="q" placeholder="<?= e(t('ابحث عن رحلة أو خدمة... (مثال: أورانج باي، سفاري، مساج)')) ?>" aria-label="<?= e(t('بحث عن رحلة')) ?>">
             </label>
             <label class="hero-search__field hero-search__select">
                 <?= icon('compass') ?>
-                <select name="cat" aria-label="نوع الرحلة">
-                    <option value="">كل أنواع الرحلات</option>
-                    <?php foreach (TRIP_CATEGORIES as $k => $label): ?><option value="<?= e($k) ?>"><?= e($label) ?></option><?php endforeach; ?>
+                <select name="cat" aria-label="<?= e(t('نوع الرحلة')) ?>">
+                    <option value=""><?= e(t('كل أنواع الرحلات')) ?></option>
+                    <?php foreach (array_keys(TRIP_CATEGORIES) as $k): ?><option value="<?= e($k) ?>"><?= e(category_label($k)) ?></option><?php endforeach; ?>
                 </select>
             </label>
-            <button class="btn btn-primary" type="submit">ابحث</button>
+            <button class="btn btn-primary" type="submit"><?= e(t('ابحث')) ?></button>
         </form>
     </div>
     <div class="hero__scroll" aria-hidden="true"></div>
@@ -46,10 +47,10 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
 
 <section class="stats">
     <div class="container stats__grid">
-        <div class="stat"><strong><?= max($tripCount, 1) ?>+</strong><span>رحلة مميزة</span></div>
-        <div class="stat"><strong><?= e(setting('stat_clients', '5000+')) ?></strong><span>عميل سعيد</span></div>
-        <div class="stat"><strong><?= e(setting('stat_rating', '4.9')) ?></strong><span>تقييم العملاء</span></div>
-        <div class="stat"><strong>24/7</strong><span>دعم ومتابعة</span></div>
+        <div class="stat"><strong><?= max($tripCount, 1) ?>+</strong><span><?= e(t('رحلة مميزة')) ?></span></div>
+        <div class="stat"><strong><?= e(setting('stat_clients', '5000+')) ?></strong><span><?= e(t('عميل سعيد')) ?></span></div>
+        <div class="stat"><strong><?= e(setting('stat_rating', '4.9')) ?></strong><span><?= e(t('تقييم العملاء')) ?></span></div>
+        <div class="stat"><strong>24/7</strong><span><?= e(t('دعم ومتابعة')) ?></span></div>
     </div>
 </section>
 
@@ -57,18 +58,18 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
     <div class="container">
         <div class="section-head">
             <div>
-                <span class="kicker">رحلاتنا المميزة</span>
-                <h2>أشهر الرحلات في الغردقة</h2>
-                <p>اخترنا لك أكثر الرحلات طلباً، بأسعار واضحة تشمل الانتقالات من وإلى فندقك.</p>
+                <span class="kicker"><?= e(t('رحلاتنا المميزة')) ?></span>
+                <h2><?= e(t('أشهر الرحلات في الغردقة')) ?></h2>
+                <p><?= e(t('اخترنا لك أكثر الرحلات طلباً، بأسعار واضحة تشمل الانتقالات من وإلى فندقك.')) ?></p>
             </div>
-            <a href="<?= e(base_url('trips.php')) ?>" class="btn btn-outline">كل الرحلات <?= icon('arrow') ?></a>
+            <a href="<?= e(url('trips.php')) ?>" class="btn btn-outline"><?= e(t('كل الرحلات')) ?> <?= icon('arrow') ?></a>
         </div>
         <?php if ($featured): ?>
             <div class="trip-grid">
                 <?php foreach ($featured as $t) echo trip_card($t); ?>
             </div>
         <?php else: ?>
-            <p class="empty">سيتم إضافة الرحلات قريباً.</p>
+            <p class="empty"><?= e(t('سيتم إضافة الرحلات قريباً.')) ?></p>
         <?php endif; ?>
     </div>
 </section>
@@ -77,16 +78,16 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
     <div class="container">
         <div class="section-head section-head--center">
             <div>
-                <span class="kicker">اختر مغامرتك</span>
-                <h2>أنواع الرحلات</h2>
+                <span class="kicker"><?= e(t('اختر مغامرتك')) ?></span>
+                <h2><?= e(t('أنواع الرحلات')) ?></h2>
             </div>
         </div>
         <div class="cat-grid">
-            <?php foreach (TRIP_CATEGORIES as $k => $label): ?>
-                <a class="cat-card" href="<?= e(base_url('trips.php?cat=' . $k)) ?>">
+            <?php foreach (array_keys(TRIP_CATEGORIES) as $k): ?>
+                <a class="cat-card" href="<?= e(url('trips.php?cat=' . $k)) ?>">
                     <span class="cat-card__icon"><?= icon($catIcons[$k] ?? 'compass') ?></span>
-                    <strong><?= e($label) ?></strong>
-                    <small><?= (int)($catCounts[$k] ?? 0) ?> <?= e(category_unit($k)) ?></small>
+                    <strong><?= e(category_label($k)) ?></strong>
+                    <small><?= e(category_count((int)($catCounts[$k] ?? 0), $k)) ?></small>
                 </a>
             <?php endforeach; ?>
         </div>
@@ -98,11 +99,11 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
     <div class="container">
         <div class="section-head">
             <div>
-                <span class="kicker">معالم الغردقة</span>
-                <h2>أماكن تستحق الزيارة</h2>
-                <p>جزر ساحرة، شعاب مرجانية، صحراء ذهبية ومعالم مميزة — هذه بعض الأماكن التي ستزورها معنا.</p>
+                <span class="kicker"><?= e(t('معالم الغردقة')) ?></span>
+                <h2><?= e(t('أماكن تستحق الزيارة')) ?></h2>
+                <p><?= e(t('جزر ساحرة، شعاب مرجانية، صحراء ذهبية ومعالم مميزة — هذه بعض الأماكن التي ستزورها معنا.')) ?></p>
             </div>
-            <a href="<?= e(base_url('gallery.php')) ?>" class="btn btn-outline">المعرض الكامل <?= icon('arrow') ?></a>
+            <a href="<?= e(url('gallery.php')) ?>" class="btn btn-outline"><?= e(t('المعرض الكامل')) ?> <?= icon('arrow') ?></a>
         </div>
         <div class="places-mosaic" data-lightbox-group>
             <?php foreach ($places as $i => $p): ?>
@@ -119,21 +120,21 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
 <section class="section section--navy" id="about">
     <div class="container about">
         <div class="about__text">
-            <span class="kicker kicker--gold">من نحن</span>
-            <h2>لماذا تختار إيجلز للسياحة؟</h2>
+            <span class="kicker kicker--gold"><?= e(t('من نحن')) ?></span>
+            <h2><?= e(t('لماذا تختار إيجلز للسياحة؟')) ?></h2>
             <p><?= nl2br(e(setting('about_text'))) ?></p>
             <ul class="features">
-                <li><span><?= icon('shield') ?></span><div><strong>أمان وتأمين كامل</strong><small>يخوت مرخصة ومرشدون ومنقذون محترفون في كل رحلة.</small></div></li>
-                <li><span><?= icon('tag') ?></span><div><strong>أسعار واضحة بدون مفاجآت</strong><small>السعر يشمل الانتقالات وكل ما هو مذكور في تفاصيل الرحلة.</small></div></li>
-                <li><span><?= icon('users') ?></span><div><strong>فريق محلي خبير</strong><small>نعرف الغردقة جيداً ونرشح لك الأنسب لك ولعائلتك.</small></div></li>
-                <li><span><?= icon('chat') ?></span><div><strong>حجز سهل وسريع</strong><small>احجز من الموقع أو عبر واتساب وسنتواصل معك فوراً.</small></div></li>
+                <li><span><?= icon('shield') ?></span><div><strong><?= e(t('أمان وتأمين كامل')) ?></strong><small><?= e(t('يخوت مرخصة ومرشدون ومنقذون محترفون في كل رحلة.')) ?></small></div></li>
+                <li><span><?= icon('tag') ?></span><div><strong><?= e(t('أسعار واضحة بدون مفاجآت')) ?></strong><small><?= e(t('السعر يشمل الانتقالات وكل ما هو مذكور في تفاصيل الرحلة.')) ?></small></div></li>
+                <li><span><?= icon('users') ?></span><div><strong><?= e(t('فريق محلي خبير')) ?></strong><small><?= e(t('نعرف الغردقة جيداً ونرشح لك الأنسب لك ولعائلتك.')) ?></small></div></li>
+                <li><span><?= icon('chat') ?></span><div><strong><?= e(t('حجز سهل وسريع')) ?></strong><small><?= e(t('احجز من الموقع أو عبر واتساب وسنتواصل معك فوراً.')) ?></small></div></li>
             </ul>
         </div>
         <div class="about__media">
             <?php $aboutImgs = array_slice(array_column($places, 'image'), 1, 2); ?>
-            <?= img_tag($aboutImgs[0] ?? setting('hero_image'), 'رحلات إيجلز في الغردقة', 'about__img1') ?>
-            <?= img_tag($aboutImgs[1] ?? setting('hero_image'), 'البحر الأحمر', 'about__img2') ?>
-            <div class="about__badge"><strong>+<?= e(setting('stat_years', '10')) ?></strong><small>سنوات خبرة<br>في البحر الأحمر</small></div>
+            <?= img_tag($aboutImgs[0] ?? setting('hero_image'), t('رحلات إيجلز في الغردقة'), 'about__img1') ?>
+            <?= img_tag($aboutImgs[1] ?? setting('hero_image'), t('البحر الأحمر'), 'about__img2') ?>
+            <div class="about__badge"><strong>+<?= e(setting('stat_years', '10')) ?></strong><small><?= e(t('سنوات خبرة')) ?><br><?= e(t('في البحر الأحمر')) ?></small></div>
         </div>
     </div>
 </section>
@@ -148,7 +149,7 @@ if ($reviews): ?>
 <section class="section section--tint">
     <div class="container">
         <div class="section-head section-head--center">
-            <div><span class="kicker">آراء عملائنا</span><h2>ماذا قالوا عن رحلاتنا</h2></div>
+            <div><span class="kicker"><?= e(t('آراء عملائنا')) ?></span><h2><?= e(t('ماذا قالوا عن رحلاتنا')) ?></h2></div>
         </div>
         <div class="reviews">
             <?php foreach (array_slice($reviews, 0, 6) as [$name, $from, $text]): ?>
@@ -166,12 +167,12 @@ if ($reviews): ?>
 <section class="cta-band">
     <div class="container cta-band__inner">
         <div>
-            <h2>جاهز لمغامرتك القادمة في الغردقة؟</h2>
-            <p>تواصل معنا الآن واحصل على أفضل عرض لرحلتك أو لمجموعتك.</p>
+            <h2><?= e(t('جاهز لمغامرتك القادمة في الغردقة؟')) ?></h2>
+            <p><?= e(t('تواصل معنا الآن واحصل على أفضل عرض لرحلتك أو لمجموعتك.')) ?></p>
         </div>
         <div class="btn-row">
-            <a href="<?= e(whatsapp_link('مرحباً، أريد عرض سعر لرحلة')) ?>" class="btn btn-gold btn-lg" target="_blank" rel="noopener"><?= icon('chat') ?> واتساب</a>
-            <a href="tel:<?= e(preg_replace('/\s+/', '', setting('phone'))) ?>" class="btn btn-ghost btn-lg"><?= icon('phone') ?> اتصل بنا</a>
+            <a href="<?= e(whatsapp_link(t('مرحباً، أريد عرض سعر لرحلة'))) ?>" class="btn btn-gold btn-lg" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('واتساب')) ?></a>
+            <a href="tel:<?= e(preg_replace('/\s+/', '', setting('phone'))) ?>" class="btn btn-ghost btn-lg"><?= icon('phone') ?> <?= e(t('اتصل بنا')) ?></a>
         </div>
     </div>
 </section>

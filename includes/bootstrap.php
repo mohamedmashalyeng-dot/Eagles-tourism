@@ -6,12 +6,16 @@
 declare(strict_types=1);
 
 define('ROOT', dirname(__DIR__));
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.1.0');
+/** Bumped when tables are added; ensure_schema() upgrades older installs on the next request. */
+const SCHEMA_VERSION = 2;
 /** Private folder next to (outside) the web root: config, install key and logs live here when the host allows it. */
 define('PRIVATE_DIR', dirname(ROOT) . '/eagles-private');
 
 mb_internal_encoding('UTF-8');
 date_default_timezone_set('Africa/Cairo');
+
+require __DIR__ . '/i18n.php';
 
 const TRIP_CATEGORIES = [
     'sea'    => 'رحلات بحرية',
@@ -207,9 +211,28 @@ function settings(): array
     return $s;
 }
 
+/**
+ * A setting value. Visitor-facing texts are returned in the current language:
+ * the admin's translation → the built-in translation (while the Arabic text is still the default)
+ * → the admin's English translation → the Arabic text.
+ */
 function setting(string $key, string $default = ''): string
 {
     $s = settings();
+    $l = lang();
+    if ($l !== DEFAULT_LANG && in_array($key, TRANSLATABLE_SETTINGS, true)) {
+        $isDefault = ($s[$key] ?? '') === (DEFAULT_SETTINGS[$key] ?? null);
+        $candidates = [
+            $s[$key . '__' . $l] ?? '',
+            $isDefault ? (default_setting_translation($key, $l) ?? '') : '',
+            $s[$key . '__en'] ?? '',
+        ];
+        foreach ($candidates as $v) {
+            if (trim($v) !== '') {
+                return $v;
+            }
+        }
+    }
     return isset($s[$key]) && $s[$key] !== '' ? $s[$key] : $default;
 }
 
@@ -266,14 +289,20 @@ function whatsapp_link(string $message = ''): string
 }
 
 /** Spa services are counted as sessions, not trips. */
-function category_unit(?string $key): string
+function is_spa_category(?string $key): bool
 {
-    return in_array($key, ['massage', 'hammam'], true) ? 'جلسة' : 'رحلة';
+    return in_array($key, ['massage', 'hammam'], true);
+}
+
+/** "8 trips" / "3 sessions" in the current language. */
+function category_count(int $n, ?string $key): string
+{
+    return count_label($n, is_spa_category($key) ? 'session' : 'trip');
 }
 
 function category_label(?string $key): string
 {
-    return TRIP_CATEGORIES[$key] ?? 'رحلات متنوعة';
+    return t(TRIP_CATEGORIES[$key] ?? 'رحلات متنوعة');
 }
 
 /* -------------------------------------------------------------- session */
@@ -283,8 +312,7 @@ function start_session(): void
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
-    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $secure = is_https();
     session_name('eagles_sid');
     session_set_cookie_params([
         'lifetime' => 0,
@@ -315,7 +343,7 @@ function verify_csrf(): void
     $sent = (string)($_POST['_token'] ?? '');
     if ($sent === '' || !hash_equals(csrf_token(), $sent)) {
         http_response_code(419);
-        exit('انتهت صلاحية الجلسة، برجاء الرجوع وإعادة المحاولة.');
+        exit(e(t('انتهت صلاحية الجلسة، برجاء الرجوع وإعادة المحاولة.')));
     }
 }
 
@@ -565,6 +593,25 @@ ini_set('display_startup_errors', config('debug') ? '1' : '0');
 
 if (PHP_SAPI !== 'cli' && !defined('INSTALLER') && !is_installed()) {
     redirect('install.php');
+}
+
+/** Creates tables added after the first install (translations) and fills translations of the demo content. */
+function ensure_schema(): void
+{
+    if ((int)(settings()['schema_version'] ?? 0) >= SCHEMA_VERSION) {
+        return;
+    }
+    try {
+        require_once __DIR__ . '/schema.php';
+        install_schema(db(), db_driver());
+        seed_content_translations(db());
+        save_setting('schema_version', (string)SCHEMA_VERSION);
+    } catch (Throwable $ex) {
+        error_log('Schema upgrade failed: ' . $ex->getMessage());
+    }
+}
+if (!defined('INSTALLER') && is_installed()) {
+    ensure_schema();
 }
 
 require __DIR__ . '/icons.php';

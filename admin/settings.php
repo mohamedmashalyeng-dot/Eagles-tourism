@@ -43,6 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
                 save_setting($key, trim((string)($_POST[$key] ?? '')));
             }
         }
+        foreach (TRANSLATABLE_SETTINGS as $key) {
+            foreach (array_keys(LANGS) as $code) {
+                if ($code !== DEFAULT_LANG) {
+                    save_setting($key . '__' . $code, trim((string)($_POST['tr'][$code][$key] ?? '')));
+                }
+            }
+        }
         try {
             $current = setting('hero_image');
             $up = upload_image($_FILES['hero_image'] ?? null, 'site');
@@ -103,6 +110,23 @@ admin_header('الإعدادات', 'settings');
                 </div>
             </section>
         <?php endforeach; ?>
+        <?php
+        $allLabels = array_merge(...array_values($fields));
+        $trLabels = [];
+        foreach (TRANSLATABLE_SETTINGS as $key) {
+            $type = ($allLabels[$key][1] ?? 'text') === 'textarea' ? 'list' : 'input';
+            $trLabels[$key] = [$allLabels[$key][0] ?? $key, $type];
+        }
+        $trValues = [];
+        foreach (array_keys(LANGS) as $code) {
+            foreach (TRANSLATABLE_SETTINGS as $key) {
+                $trValues[$code][$key] = settings()[$key . '__' . $code] ?? '';
+            }
+        }
+        echo translations_panel('ترجمة نصوص الموقع', $trLabels, $trValues, false,
+            'لو سبت الخانة فاضية: الموقع بيعرض الترجمة الجاهزة طالما النص العربي زي ما هو، ولو غيّرت النص العربي بيعرض الترجمة الإنجليزي أو العربي.');
+        ?>
+
         <section class="panel">
             <h2 class="panel__title">صورة الواجهة الرئيسية</h2>
             <div class="cover-preview cover-preview--wide" id="heroPreview"><?= img_tag($hero, 'صورة الواجهة') ?></div>
