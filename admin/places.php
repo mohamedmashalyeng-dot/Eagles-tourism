@@ -68,7 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
                 ->execute([$name, $desc, $image, $active, $order, now()]);
             $id = (int)$pdo->lastInsertId();
         }
-        save_translations('place_translations', 'place_id', $id, PLACE_I18N_FIELDS, (array)($_POST['tr'] ?? []), ['name' => 150, 'description' => 1000]);
+        save_translations('place_translations', 'place_id', $id, PLACE_I18N_FIELDS, (array)($_POST['tr'] ?? []), PLACE_TR_LIMITS);
+        if (auto_translate_enabled()) {
+            auto_translate_flash(fn() => auto_translate_row('place_translations', 'place_id', $id, PLACE_I18N_FIELDS,
+                ['name' => $name, 'description' => $desc], isset($_POST['retranslate']), PLACE_TR_LIMITS));
+        }
         flash('success', 'تم حفظ المكان بنجاح.');
         redirect('admin/places.php');
     }

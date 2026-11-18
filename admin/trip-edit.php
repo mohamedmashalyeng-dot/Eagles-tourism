@@ -20,7 +20,7 @@ if ($id) {
     $trip = $found;
 }
 $translations = load_translations('trip_translations', 'trip_id', $id);
-$trLimits = ['title' => 200, 'short_description' => 1000, 'duration' => 100, 'location' => 150, 'pickup_time' => 100, 'group_size' => 100];
+$trLimits = TRIP_TR_LIMITS;
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
@@ -95,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         }
 
         save_translations('trip_translations', 'trip_id', $id, TRIP_I18N_FIELDS, (array)($_POST['tr'] ?? []), $trLimits);
+        if (auto_translate_enabled()) {
+            auto_translate_flash(fn() => auto_translate_row('trip_translations', 'trip_id', $id, TRIP_I18N_FIELDS, $data, isset($_POST['retranslate']), $trLimits));
+        }
 
         if ($oldCover !== $data['cover_image']) {
             delete_upload($oldCover);

@@ -1,6 +1,7 @@
 <?php
 /** Shared admin layout helpers. */
 require_once dirname(__DIR__) . '/includes/bootstrap.php';
+require_once dirname(__DIR__) . '/includes/translate.php';
 header('X-Robots-Tag: noindex, nofollow');
 
 /**
@@ -13,6 +14,12 @@ function translations_panel(string $title, array $labels, array $values, bool $c
     <<?= $compact ? 'div' : 'section' ?> class="<?= $compact ? 'tr-compact' : 'panel' ?>">
         <?php if ($title !== ''): ?><h2 class="panel__title"><?= e($title) ?> <small>(اختياري — الخانة الفاضية بتعرض النص العربي)</small></h2><?php endif; ?>
         <?php if ($hint !== ''): ?><p class="hint"><?= e($hint) ?></p><?php endif; ?>
+        <?php if (auto_translate_enabled()): ?>
+            <p class="tr-auto is-on"><?= icon('check') ?> الترجمة التلقائية شغّالة: أي خانة فاضية هتتترجم لوحدها من النص العربي لما تحفظ.</p>
+            <label class="check"><input type="checkbox" name="retranslate"> أعد ترجمة كل الخانات من النص العربي (هيستبدل الترجمة الحالية)</label>
+        <?php else: ?>
+            <p class="tr-auto">الترجمة التلقائية مقفولة. تقدر تفعّلها من <a href="<?= e(base_url('admin/settings.php#auto-translate')) ?>">الإعدادات</a>.</p>
+        <?php endif; ?>
         <?php foreach (LANGS as $code => $info): if ($code === DEFAULT_LANG) continue;
             $v = (array)($values[$code] ?? []);
             $filled = count(array_filter(array_map(fn($f) => trim((string)($v[$f] ?? '')), array_keys($labels)), fn($x) => $x !== ''));

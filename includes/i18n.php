@@ -24,6 +24,9 @@ const TRANSLATABLE_SETTINGS = [
 /** Translatable text columns of trips and places (see trip_translations / place_translations). */
 const TRIP_I18N_FIELDS  = ['title', 'short_description', 'description', 'duration', 'location', 'pickup_time', 'group_size', 'includes', 'excludes', 'itinerary'];
 const PLACE_I18N_FIELDS = ['name', 'description'];
+/** Column sizes of the translation tables (longer text is cut). */
+const TRIP_TR_LIMITS  = ['title' => 200, 'short_description' => 1000, 'duration' => 100, 'location' => 150, 'pickup_time' => 100, 'group_size' => 100];
+const PLACE_TR_LIMITS = ['name' => 150, 'description' => 1000];
 
 function is_https(): bool
 {

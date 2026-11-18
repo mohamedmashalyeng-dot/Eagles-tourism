@@ -50,6 +50,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
                 }
             }
         }
+        // automatic translation: the key is only replaced when a new one is typed
+        $newKey = trim((string)($_POST['google_translate_key'] ?? ''));
+        if (isset($_POST['remove_translate_key'])) {
+            save_setting('google_translate_key', '');
+        } elseif ($newKey !== '') {
+            save_setting('google_translate_key', $newKey);
+        }
+        save_setting('auto_translate', isset($_POST['auto_translate']) ? '1' : '0');
+        settings(true); // reload, so the key and switch saved above are used right away
+        if (auto_translate_enabled()) {
+            $arabic = [];
+            foreach (TRANSLATABLE_SETTINGS as $key) {
+                $arabic[$key] = trim((string)($_POST[$key] ?? ''));
+            }
+            auto_translate_flash(fn() => auto_translate_settings($arabic, (array)($_POST['tr'] ?? []), isset($_POST['retranslate'])));
+        }
         try {
             $current = setting('hero_image');
             $up = upload_image($_FILES['hero_image'] ?? null, 'site');
@@ -65,6 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
             redirect('admin/settings.php');
         } catch (RuntimeException $ex) {
             $errors[] = $ex->getMessage();
+        }
+    } elseif ($action === 'translate_all') {
+        if (translate_api_key() === '') {
+            $errors[] = 'سجّل مفتاح Google Translate الأول.';
+        } else {
+            auto_translate_flash(fn() => auto_translate_everything());
+            redirect('admin/settings.php#auto-translate');
         }
     } elseif ($action === 'password') {
         $st = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
@@ -127,6 +150,25 @@ admin_header('الإعدادات', 'settings');
             'لو سبت الخانة فاضية: الموقع بيعرض الترجمة الجاهزة طالما النص العربي زي ما هو، ولو غيّرت النص العربي بيعرض الترجمة الإنجليزي أو العربي.');
         ?>
 
+        <section class="panel" id="auto-translate">
+            <h2 class="panel__title">الترجمة التلقائية (Google Translate)</h2>
+            <p class="hint">لما تحفظ رحلة أو مكان أو الإعدادات، أي خانة ترجمة فاضية بتتترجم لوحدها من العربي للإنجليزي والروسي والإسباني. الترجمة اللي إنت كاتبها بإيدك مش بتتغير.</p>
+            <?php $hasKey = translate_api_key() !== ''; $keyInConfig = trim((string)config('google_translate_key', '')) !== ''; ?>
+            <div class="grid-2">
+                <div class="field span-2">
+                    <label for="gkey">مفتاح Google Cloud Translation API</label>
+                    <?php if ($keyInConfig): ?>
+                        <p class="tr-auto is-on">المفتاح متسجل في ملف config.php.</p>
+                    <?php else: ?>
+                        <input id="gkey" type="password" name="google_translate_key" dir="ltr" autocomplete="off"
+                               placeholder="<?= $hasKey ? '•••••••• المفتاح محفوظ — اكتب مفتاح جديد لو عايز تغيّره' : 'AIza...' ?>">
+                        <?php if ($hasKey): ?><label class="check"><input type="checkbox" name="remove_translate_key"> امسح المفتاح</label><?php endif; ?>
+                    <?php endif; ?>
+                </div>
+                <label class="check span-2"><input type="checkbox" name="auto_translate" <?= (settings()['auto_translate'] ?? '1') === '1' ? 'checked' : '' ?>> ترجم تلقائياً عند الحفظ</label>
+            </div>
+        </section>
+
         <section class="panel">
             <h2 class="panel__title">صورة الواجهة الرئيسية</h2>
             <div class="cover-preview cover-preview--wide" id="heroPreview"><?= img_tag($hero, 'صورة الواجهة') ?></div>
@@ -139,6 +181,14 @@ admin_header('الإعدادات', 'settings');
     </form>
 
     <aside class="edit-side">
+        <?php if (translate_api_key() !== ''): ?>
+        <form method="post" class="form panel" data-confirm="هيترجم كل الخانات الفاضية في كل الرحلات والمعالم والإعدادات. ممكن ياخد دقيقة. تكمل؟">
+            <?= csrf_field() ?><input type="hidden" name="action" value="translate_all">
+            <h2 class="panel__title">ترجمة كل المحتوى</h2>
+            <p class="hint">بيترجم كل الخانات الفاضية في كل الرحلات والمعالم والإعدادات مرة واحدة. الترجمات الموجودة مش بتتغير.</p>
+            <button class="btn btn-primary btn-block" type="submit"><?= icon('globe') ?> ترجم الآن</button>
+        </form>
+        <?php endif; ?>
         <form method="post" class="form panel">
             <?= csrf_field() ?><input type="hidden" name="action" value="password">
             <h2 class="panel__title">تغيير كلمة المرور</h2>

@@ -195,10 +195,10 @@ const DEFAULT_SETTINGS = [
     'meta_description' => 'إيجلز للسياحة - أفضل الرحلات البحرية والسفاري والغوص والمساج والحمام التركي في الغردقة بأسعار مميزة وخدمة احترافية.',
 ];
 
-function settings(): array
+function settings(bool $reload = false): array
 {
     static $s = null;
-    if ($s === null) {
+    if ($s === null || $reload) {
         $s = DEFAULT_SETTINGS;
         try {
             foreach (db()->query('SELECT skey, svalue FROM settings') as $row) {
