@@ -1,0 +1,84 @@
+# Auto-deploy to eaglestours.com (Enhance) over SSH on every push.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST      SSH host of the Enhance server (e.g. the server hostname or IP)
+#   DEPLOY_USER      SSH username of the website in Enhance
+#   DEPLOY_SSH_KEY   Private key whose public key is added in Enhance → SSH keys
+# Optional:
+#   DEPLOY_PORT         SSH port (default 22)
+#   DEPLOY_PATH         Target folder relative to the SSH home (default public_html)
+#   DEPLOY_KNOWN_HOSTS  Pinned host key line(s); falls back to ssh-keyscan
+#
+# Never uploaded: install.php, data/, uploads/, config.php, docs. Nothing on the
+# server is deleted, so config, the database lock, logs and uploaded images stay.
+
+name: Deploy
+
+on:
+  push:
+    branches: [claude/eagles-tourism-website-0tys2m, main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || 'public_html' }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+    steps:
+      - name: Check deploy secrets
+        id: check
+        run: |
+          if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::warning::Deploy secrets are not set yet (DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY). Skipping deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.ready == 'true'
+
+      - name: PHP syntax check
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Set up SSH
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -n "$DEPLOY_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload files
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          git archive --format=tar HEAD -- . \
+            ':!.github' ':!.gitignore' ':!README.md' ':!DEPLOYMENT.md' \
+            ':!install.php' ':!data' ':!uploads' ':!config.php' \
+          | ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o BatchMode=yes \
+              "$DEPLOY_USER@$DEPLOY_HOST" \
+              "test -f '$DEPLOY_PATH/index.php' || { echo 'Target $DEPLOY_PATH has no index.php - install the site first'; exit 1; }; tar -xf - -C '$DEPLOY_PATH' && echo 'Deployed to $DEPLOY_PATH'"
+
+      - name: Smoke test
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://eaglestours.com/)
+          echo "Home page HTTP $code"
+          [ "$code" = "200" ]
