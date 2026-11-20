@@ -60,7 +60,7 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
             <div>
                 <span class="kicker"><?= e(t('رحلاتنا المميزة')) ?></span>
                 <h2><?= e(t('أشهر الرحلات في الغردقة')) ?></h2>
-                <p><?= e(t('اخترنا لك أكثر الرحلات طلباً، بأسعار واضحة تشمل الانتقالات من وإلى فندقك.')) ?></p>
+                <p><?= e(t('اخترنا لك أكثر الرحلات طلباً، مع الانتقالات من وإلى فندقك. اسألنا عن الأسعار والعروض على واتساب.')) ?></p>
             </div>
             <a href="<?= e(url('trips.php')) ?>" class="btn btn-outline"><?= e(t('كل الرحلات')) ?> <?= icon('arrow') ?></a>
         </div>
@@ -125,7 +125,7 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
             <p><?= nl2br(e(setting('about_text'))) ?></p>
             <ul class="features">
                 <li><span><?= icon('shield') ?></span><div><strong><?= e(t('أمان وتأمين كامل')) ?></strong><small><?= e(t('يخوت مرخصة ومرشدون ومنقذون محترفون في كل رحلة.')) ?></small></div></li>
-                <li><span><?= icon('tag') ?></span><div><strong><?= e(t('أسعار واضحة بدون مفاجآت')) ?></strong><small><?= e(t('السعر يشمل الانتقالات وكل ما هو مذكور في تفاصيل الرحلة.')) ?></small></div></li>
+                <li><span><?= icon('tag') ?></span><div><strong><?= e(t('أفضل عرض على واتساب')) ?></strong><small><?= e(t('ابعتلنا وهنرد عليك بالسعر وأفضل عرض متاح فوراً.')) ?></small></div></li>
                 <li><span><?= icon('users') ?></span><div><strong><?= e(t('فريق محلي خبير')) ?></strong><small><?= e(t('نعرف الغردقة جيداً ونرشح لك الأنسب لك ولعائلتك.')) ?></small></div></li>
                 <li><span><?= icon('chat') ?></span><div><strong><?= e(t('حجز سهل وسريع')) ?></strong><small><?= e(t('احجز من الموقع أو عبر واتساب وسنتواصل معك فوراً.')) ?></small></div></li>
             </ul>

@@ -18,9 +18,6 @@ function trip_card(array $t): string
         <a href="<?= $url ?>" class="trip-card__media">
             <?= img_tag($t['cover_image'], $t['title']) ?>
             <span class="trip-card__cat"><?= e(category_label($t['category'])) ?></span>
-            <?php if ((float)$t['old_price'] > (float)$t['price_adult']): ?>
-                <span class="trip-card__badge"><?= e(t('خصم {n}%', ['n' => (int)round(100 - ((float)$t['price_adult'] / (float)$t['old_price']) * 100)])) ?></span>
-            <?php endif; ?>
         </a>
         <div class="trip-card__body">
             <h3 class="trip-card__title"><a href="<?= $url ?>"><?= e($t['title']) ?></a></h3>
@@ -30,11 +27,7 @@ function trip_card(array $t): string
             </ul>
             <p class="trip-card__text"><?= e(excerpt($t['short_description'], 110)) ?></p>
             <div class="trip-card__foot">
-                <div class="trip-card__price">
-                    <small><?= e(t('يبدأ من')) ?></small>
-                    <?php if ((float)$t['old_price'] > (float)$t['price_adult']): ?><del><?= e(price($t['old_price'])) ?></del><?php endif; ?>
-                    <strong><?= e(price($t['price_adult'])) ?></strong>
-                </div>
+                <a class="trip-card__ask" href="<?= e(whatsapp_link(t('مرحباً، أريد الاستفسار عن سعر: {trip}', ['trip' => $t['title']]))) ?>" target="_blank" rel="noopener"><?= icon('chat') ?><?= e(t('اسأل عن السعر')) ?></a>
                 <a href="<?= $url ?>" class="btn btn-sm btn-outline"><?= e(t('التفاصيل')) ?> <?= icon('arrow') ?></a>
             </div>
         </div>

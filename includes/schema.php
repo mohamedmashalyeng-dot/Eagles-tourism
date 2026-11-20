@@ -264,6 +264,38 @@ function seed_sample_content(PDO $pdo): void
     seed_content_translations($pdo);
 }
 
+/** Adds the spa services (massages, Turkish bath) with their translations; skips any whose Arabic title already exists. */
+function seed_spa_services(PDO $pdo): void
+{
+    $services = require __DIR__ . '/seed_spa.php';
+    $oils = $services['@oils'];
+    unset($services['@oils']);
+    $now = date('Y-m-d H:i:s');
+    $exists = $pdo->prepare('SELECT COUNT(*) FROM trips WHERE title = ?');
+    $ins = $pdo->prepare('INSERT INTO trips (title, category, short_description, description, duration, location, pickup_time, group_size, price_adult, price_child, old_price, includes, excludes, itinerary, cover_image, is_featured, is_active, sort_order, created_at, updated_at)
+        VALUES (?,?,?,?,?,\'\',\'\',\'\',0,0,0,?,\'\',?,?,?,1,?,?,?)');
+    $img = $pdo->prepare('INSERT INTO trip_images (trip_id, path, sort_order) VALUES (?,?,?)');
+    $cols = implode(', ', TRIP_I18N_FIELDS);
+    $tr = $pdo->prepare("INSERT INTO trip_translations (trip_id, lang, $cols) VALUES (" . implode(', ', array_fill(0, count(TRIP_I18N_FIELDS) + 2, '?')) . ')');
+    foreach ($services as $s) {
+        $ar = $s['ar'];
+        $exists->execute([$ar['title']]);
+        if ((int)$exists->fetchColumn() > 0) {
+            continue;
+        }
+        $ins->execute([$ar['title'], $s['category'], $ar['short_description'], $ar['description'], $ar['duration'],
+            $ar['includes'] ?? $oils['ar'], $ar['itinerary'] ?? '', $s['cover'], $s['featured'], $s['sort'], $now, $now]);
+        $id = (int)$pdo->lastInsertId();
+        foreach ($s['gallery'] as $j => $g) {
+            $img->execute([$id, $g, $j]);
+        }
+        foreach (['en', 'ru', 'es'] as $lang) {
+            $row = $s[$lang] + ['includes' => $oils[$lang]];
+            $tr->execute([$id, $lang, ...array_map(fn($f) => (string)($row[$f] ?? ''), TRIP_I18N_FIELDS)]);
+        }
+    }
+}
+
 /**
  * Adds the built-in English / Russian / Spanish translations of the demo trips and places
  * (matched by their Arabic title / name). Rows that already have a translation are left alone.

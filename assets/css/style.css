@@ -470,3 +470,10 @@ html[dir="ltr"] { --font-head: 'Montserrat', system-ui, sans-serif; --font-body:
 @media (max-width: 960px) {
     .lang-switch summary { padding: 6px 9px; }
 }
+
+/* ---------- prices on request (WhatsApp) ---------- */
+.trip-card__ask { display: inline-flex; align-items: center; gap: 6px; color: #1a9e4b; font-weight: 700; font-size: .88rem; }
+.trip-card__ask:hover { color: var(--wa); text-decoration: underline; }
+.trip-card__foot { align-items: center; }
+.book-card__price strong { display: block; font-size: 1.5rem; margin: 2px 0 4px; }
+.book-card__price .btn { margin-top: 12px; }

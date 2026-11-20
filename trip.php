@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$d || $d->format('Y-m-d') !== $f['date'] || $f['date'] < date('Y-m-d')) $errors[] = t('برجاء اختيار تاريخ رحلة صحيح.');
 
     if (!$errors) {
-        $total = $f['adults'] * (float)$trip['price_adult'] + $f['children'] * (float)$trip['price_child'];
+        $total = 0; // prices are not shown on the site; the team quotes on WhatsApp
         // the dashboard is Arabic: keep the Arabic trip name and note the visitor's language
         $notes = $f['notes'];
         if (lang() !== DEFAULT_LANG) {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $f['adults'], $f['children'], mb_substr($f['hotel'], 0, 150), mb_substr($notes, 0, 2000), $total, 'new', now()]);
         $_SESSION['last_booking'] = [
             'trip' => $tripForStaff, 'name' => $f['name'], 'date' => $f['date'],
-            'adults' => $f['adults'], 'children' => $f['children'], 'total' => $total, 'hotel' => $f['hotel'],
+            'adults' => $f['adults'], 'children' => $f['children'], 'hotel' => $f['hotel'],
         ];
         unset($_SESSION['old']);
         redirect(url('trip.php?id=' . $id . '&booked=1#book'));
@@ -86,7 +86,7 @@ $activeNav = 'trips';
 require __DIR__ . '/includes/header.php';
 echo page_banner($trip['title'], category_label($trip['category']) . ($trip['location'] ? ' · ' . $trip['location'] : ''), $trip['cover_image']);
 
-$waMsg = t('مرحباً، أريد حجز رحلة: {trip}', ['trip' => $tripForStaff]);
+$waMsg = t('مرحباً، أريد الاستفسار عن سعر وحجز: {trip}', ['trip' => $tripForStaff]);
 ?>
 <section class="section trip-page">
     <div class="container trip-layout">
@@ -121,13 +121,13 @@ $waMsg = t('مرحباً، أريد حجز رحلة: {trip}', ['trip' => $tripFo
             <div class="trip-block incl-grid">
                 <?php if ($includes): ?>
                 <div>
-                    <h3><?= e(t('السعر يشمل')) ?></h3>
+                    <h3><?= e(t('يشمل')) ?></h3>
                     <ul class="ticks"><?php foreach ($includes as $l): ?><li><?= icon('check') ?><?= e($l) ?></li><?php endforeach; ?></ul>
                 </div>
                 <?php endif; ?>
                 <?php if ($excludes): ?>
                 <div>
-                    <h3><?= e(t('السعر لا يشمل')) ?></h3>
+                    <h3><?= e(t('لا يشمل')) ?></h3>
                     <ul class="ticks ticks--no"><?php foreach ($excludes as $l): ?><li><?= icon('x') ?><?= e($l) ?></li><?php endforeach; ?></ul>
                 </div>
                 <?php endif; ?>
@@ -151,12 +151,10 @@ $waMsg = t('مرحباً، أريد حجز رحلة: {trip}', ['trip' => $tripFo
         <aside class="trip-aside" id="book">
             <div class="book-card">
                 <div class="book-card__price">
-                    <small><?= e($isSpa ? t('سعر الجلسة للفرد') : t('سعر الفرد')) ?></small>
-                    <div>
-                        <?php if ((float)$trip['old_price'] > (float)$trip['price_adult']): ?><del><?= e(price($trip['old_price'])) ?></del><?php endif; ?>
-                        <strong><?= e(price($trip['price_adult'])) ?></strong>
-                    </div>
-                    <?php if ((float)$trip['price_child'] > 0): ?><span><?= e(t('الطفل: {price}', ['price' => price($trip['price_child'])])) ?></span><?php endif; ?>
+                    <small><?= e(t('الأسعار والعروض')) ?></small>
+                    <strong><?= e(t('اسأل على واتساب')) ?></strong>
+                    <span><?= e(t('ابعتلنا وهنرد عليك بالسعر وأفضل عرض متاح فوراً.')) ?></span>
+                    <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($waMsg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('اسأل عن السعر على واتساب')) ?></a>
                 </div>
 
                 <?php if ($booked): ?>
@@ -169,15 +167,13 @@ $waMsg = t('مرحباً، أريد حجز رحلة: {trip}', ['trip' => $tripFo
                             . t('الاسم: {v}', ['v' => $booked['name']]) . "\n"
                             . t('التاريخ: {v}', ['v' => $booked['date']]) . "\n"
                             . t('البالغين: {a} - الأطفال: {c}', ['a' => $booked['adults'], 'c' => $booked['children']]) . "\n"
-                            . t('الفندق: {v}', ['v' => $booked['hotel']]) . "\n"
-                            . t('الإجمالي: {v}', ['v' => price($booked['total'])]); ?>
+                            . t('الفندق: {v}', ['v' => $booked['hotel']]); ?>
                         <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($msg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('أرسل على واتساب')) ?></a>
                     </div>
                 <?php else: ?>
-                    <h3 class="book-card__title"><?= e($isSpa ? t('احجز جلستك الآن') : t('احجز رحلتك الآن')) ?></h3>
+                    <h3 class="book-card__title"><?= e($isSpa ? t('أو أرسل طلب حجز للجلسة') : t('أو أرسل طلب حجز')) ?></h3>
                     <?php foreach ($errors as $err): ?><div class="alert alert-error"><?= e($err) ?></div><?php endforeach; ?>
-                    <form method="post" action="<?= e(url('trip.php?id=' . $id)) ?>#book" class="form book-form" id="bookForm"
-                          data-adult="<?= e((float)$trip['price_adult']) ?>" data-child="<?= e((float)$trip['price_child']) ?>" data-currency="<?= e(setting('currency', 'ج.م')) ?>">
+                    <form method="post" action="<?= e(url('trip.php?id=' . $id)) ?>#book" class="form book-form" id="bookForm">
                         <?= csrf_field() ?>
                         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
                         <div class="field"><label for="bName"><?= e(t('الاسم بالكامل')) ?></label><input id="bName" name="name" required value="<?= e(old('name')) ?>"></div>
@@ -190,11 +186,8 @@ $waMsg = t('مرحباً، أريد حجز رحلة: {trip}', ['trip' => $tripFo
                         <div class="field"><label for="bHotel"><?= e(t('اسم الفندق (اختياري)')) ?></label><input id="bHotel" name="hotel" value="<?= e(old('hotel')) ?>"></div>
                         <div class="field"><label for="bEmail"><?= e(t('البريد الإلكتروني (اختياري)')) ?></label><input id="bEmail" name="email" type="email" dir="ltr" value="<?= e(old('email')) ?>"></div>
                         <div class="field"><label for="bNotes"><?= e(t('ملاحظات (اختياري)')) ?></label><textarea id="bNotes" name="notes" rows="2"><?= e(old('notes')) ?></textarea></div>
-                        <div class="book-total"><span><?= e(t('الإجمالي التقديري')) ?></span><strong id="bookTotal"><?= e(price((float)$trip['price_adult'] * 2)) ?></strong></div>
                         <button class="btn btn-primary btn-block btn-lg" type="submit"><?= e(t('تأكيد طلب الحجز')) ?></button>
                     </form>
-                    <div class="or"><span><?= e(t('أو')) ?></span></div>
-                    <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($waMsg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('احجز عبر واتساب')) ?></a>
                     <?php unset($_SESSION['old']); ?>
                 <?php endif; ?>
                 <?php if ($policy = lines(setting('booking_policy'))): ?>

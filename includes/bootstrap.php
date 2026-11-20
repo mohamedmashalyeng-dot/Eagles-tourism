@@ -8,7 +8,7 @@ declare(strict_types=1);
 define('ROOT', dirname(__DIR__));
 define('APP_VERSION', '1.1.0');
 /** Bumped when tables are added; ensure_schema() upgrades older installs on the next request. */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 /** Private folder next to (outside) the web root: config, install key and logs live here when the host allows it. */
 define('PRIVATE_DIR', dirname(ROOT) . '/eagles-private');
 
@@ -174,8 +174,8 @@ function now(): string
 const DEFAULT_SETTINGS = [
     'site_name'      => 'Eagles Tourism',
     'site_tagline'   => 'رحلات وسياحة الغردقة',
-    'phone'          => '+20 100 000 0000',
-    'whatsapp'       => '201000000000',
+    'phone'          => '+20 10 99018664',
+    'whatsapp'       => '201099018664',
     'email'          => 'info@eagles-tourism.com',
     'address'        => 'شارع الشيراتون، السقالة، الغردقة، البحر الأحمر، مصر',
     'facebook'       => '',
@@ -595,19 +595,46 @@ if (PHP_SAPI !== 'cli' && !defined('INSTALLER') && !is_installed()) {
     redirect('install.php');
 }
 
-/** Creates tables added after the first install (translations) and fills translations of the demo content. */
+/**
+ * One-time upgrades of existing installs, run on the first request after a deploy:
+ *  v2 - translation tables + translations of the demo content
+ *  v3 - spa services (massages, Turkish bath) and the WhatsApp / phone number 010 990 18664
+ */
 function ensure_schema(): void
 {
     if ((int)(settings()['schema_version'] ?? 0) >= SCHEMA_VERSION) {
         return;
     }
+    $pdo = db();
+    $mysql = db_driver() !== 'sqlite';
     try {
-        require_once __DIR__ . '/schema.php';
-        install_schema(db(), db_driver());
-        seed_content_translations(db());
-        save_setting('schema_version', (string)SCHEMA_VERSION);
+        // only one request runs the upgrade; the others wait and then see the new version
+        if ($mysql && !(int)$pdo->query("SELECT GET_LOCK('eagles_schema', 15)")->fetchColumn()) {
+            return;
+        }
+        $st = $pdo->prepare('SELECT svalue FROM settings WHERE skey = ?');
+        $st->execute(['schema_version']);
+        $v = (int)($st->fetchColumn() ?: 0);
+        if ($v < SCHEMA_VERSION) {
+            require_once __DIR__ . '/schema.php';
+            if ($v < 2) {
+                install_schema($pdo, db_driver());
+                seed_content_translations($pdo);
+            }
+            if ($v < 3) {
+                seed_spa_services($pdo);
+                save_setting('whatsapp', '201099018664');
+                save_setting('phone', '+20 10 99018664');
+            }
+            save_setting('schema_version', (string)SCHEMA_VERSION);
+            settings(true);
+        }
     } catch (Throwable $ex) {
         error_log('Schema upgrade failed: ' . $ex->getMessage());
+    } finally {
+        if ($mysql) {
+            try { $pdo->query("SELECT RELEASE_LOCK('eagles_schema')"); } catch (Throwable) {}
+        }
     }
 }
 if (!defined('INSTALLER') && is_installed()) {

@@ -21,8 +21,6 @@ if ($q !== '') {
     array_push($params, $like, $like, $like, $like, $like, $like);
 }
 $order = match ($sort) {
-    'price_asc'  => 'price_adult ASC',
-    'price_desc' => 'price_adult DESC',
     'new'        => 'id DESC',
     default      => 'is_featured DESC, sort_order ASC, id DESC',
 };
@@ -33,7 +31,9 @@ $trips = localize_trips($st->fetchAll());
 $pageTitle = $cat ? category_label($cat) : t('الرحلات');
 $activeNav = 'trips';
 require __DIR__ . '/includes/header.php';
-echo page_banner($pageTitle, t('اختر رحلتك من بين أفضل الرحلات البحرية والصحراوية والتاريخية في الغردقة'));
+echo page_banner($pageTitle, is_spa_category($cat)
+    ? t('جلسات مساج وحمام تركي بزيوت طبيعية 100% لراحة واسترخاء تام')
+    : t('اختر رحلتك من بين أفضل الرحلات البحرية والصحراوية والتاريخية في الغردقة'));
 ?>
 <section class="section">
     <div class="container">
@@ -50,8 +50,6 @@ echo page_banner($pageTitle, t('اختر رحلتك من بين أفضل الر�
                 <label class="search-input"><?= icon('search') ?><input type="search" name="q" value="<?= e($q) ?>" placeholder="<?= e(t('ابحث عن رحلة')) ?>"></label>
                 <select name="sort" onchange="this.form.submit()" aria-label="<?= e(t('ترتيب')) ?>">
                     <option value=""><?= e(t('الأكثر طلباً')) ?></option>
-                    <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>><?= e(t('السعر: الأقل أولاً')) ?></option>
-                    <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>><?= e(t('السعر: الأعلى أولاً')) ?></option>
                     <option value="new" <?= $sort === 'new' ? 'selected' : '' ?>><?= e(t('الأحدث')) ?></option>
                 </select>
             </div>

@@ -49,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         'cover_image' => $trip['cover_image'],
     ];
     if (mb_strlen($data['title']) < 3) $errors[] = 'اكتب اسم الرحلة.';
-    if ($data['price_adult'] <= 0) $errors[] = 'اكتب سعر الفرد (البالغ).';
     if ($data['short_description'] === '') $errors[] = 'اكتب وصفاً مختصراً للرحلة.';
     $coverUrl = $in('cover_url');
     if ($coverUrl !== '' && !preg_match('#^https?://#i', $coverUrl)) $errors[] = 'رابط صورة الغلاف يجب أن يبدأ بـ http أو https.';
@@ -219,7 +218,8 @@ admin_header($id ? 'تعديل رحلة' : 'إضافة رحلة جديدة', 'tr
 
         <section class="panel">
             <h2 class="panel__title">التكلفة (<?= e(setting('currency', 'ج.م')) ?>)</h2>
-            <div class="field"><label>سعر الفرد (بالغ) *</label><input name="price_adult" type="number" step="0.01" min="0" required value="<?= e($num($trip['price_adult'])) ?>"></div>
+            <p class="hint">للاستخدام الداخلي بس — الأسعار مش بتظهر على الموقع، والزوار بيسألوا عليها في واتساب.</p>
+            <div class="field"><label>سعر الفرد (بالغ)</label><input name="price_adult" type="number" step="0.01" min="0" value="<?= e($num($trip['price_adult'])) ?>"></div>
             <div class="field"><label>سعر الطفل</label><input name="price_child" type="number" step="0.01" min="0" value="<?= e($num($trip['price_child'])) ?>"></div>
             <div class="field"><label>السعر قبل الخصم <small>(اختياري)</small></label><input name="old_price" type="number" step="0.01" min="0" value="<?= e($num($trip['old_price'])) ?>"></div>
         </section>

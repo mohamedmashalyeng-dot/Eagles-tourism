@@ -32,7 +32,7 @@
 
     /* Booking total */
     var form = document.getElementById('bookForm');
-    if (form) {
+    if (form && document.getElementById('bookTotal')) {
         var adult = parseFloat(form.dataset.adult) || 0;
         var child = parseFloat(form.dataset.child) || 0;
         var cur = form.dataset.currency || '';
