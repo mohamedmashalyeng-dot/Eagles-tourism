@@ -1,6 +1,6 @@
 <?php
 /**
- * Automatic translation of admin content (Arabic → en / ru / es) with the
+ * Automatic translation of admin content (Arabic → en / de / ru / es) with the
  * Google Cloud Translation API v2 (Basic). Only empty translation fields are
  * filled, unless the admin asks to translate everything again.
  *
@@ -224,7 +224,7 @@ function auto_translate_flash(callable $fn): void
     try {
         $n = $fn();
         if ($n > 0) {
-            flash('success', 'اتترجم تلقائياً ' . $n . ' خانة (إنجليزي / روسي / إسباني).');
+            flash('success', 'اتترجم تلقائياً ' . $n . ' خانة (إنجليزي / ألماني / روسي / إسباني).');
         }
     } catch (Throwable $ex) {
         error_log('Auto translation failed: ' . $ex->getMessage());

@@ -10,6 +10,7 @@
 const LANGS = [
     'ar' => ['name' => 'العربية', 'short' => 'AR', 'dir' => 'rtl', 'locale' => 'ar_EG'],
     'en' => ['name' => 'English', 'short' => 'EN', 'dir' => 'ltr', 'locale' => 'en_US'],
+    'de' => ['name' => 'Deutsch', 'short' => 'DE', 'dir' => 'ltr', 'locale' => 'de_DE'],
     'ru' => ['name' => 'Русский', 'short' => 'RU', 'dir' => 'ltr', 'locale' => 'ru_RU'],
     'es' => ['name' => 'Español', 'short' => 'ES', 'dir' => 'ltr', 'locale' => 'es_ES'],
 ];

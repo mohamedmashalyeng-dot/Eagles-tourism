@@ -152,7 +152,7 @@ admin_header('الإعدادات', 'settings');
 
         <section class="panel" id="auto-translate">
             <h2 class="panel__title">الترجمة التلقائية (Google Translate)</h2>
-            <p class="hint">لما تحفظ رحلة أو مكان أو الإعدادات، أي خانة ترجمة فاضية بتتترجم لوحدها من العربي للإنجليزي والروسي والإسباني. الترجمة اللي إنت كاتبها بإيدك مش بتتغير.</p>
+            <p class="hint">لما تحفظ رحلة أو مكان أو الإعدادات، أي خانة ترجمة فاضية بتتترجم لوحدها من العربي للإنجليزي والألماني والروسي والإسباني. الترجمة اللي إنت كاتبها بإيدك مش بتتغير.</p>
             <?php $hasKey = translate_api_key() !== ''; $keyInConfig = trim((string)config('google_translate_key', '')) !== ''; ?>
             <div class="grid-2">
                 <div class="field span-2">

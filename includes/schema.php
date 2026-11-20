@@ -275,8 +275,6 @@ function seed_spa_services(PDO $pdo): void
     $ins = $pdo->prepare('INSERT INTO trips (title, category, short_description, description, duration, location, pickup_time, group_size, price_adult, price_child, old_price, includes, excludes, itinerary, cover_image, is_featured, is_active, sort_order, created_at, updated_at)
         VALUES (?,?,?,?,?,\'\',\'\',\'\',0,0,0,?,\'\',?,?,?,1,?,?,?)');
     $img = $pdo->prepare('INSERT INTO trip_images (trip_id, path, sort_order) VALUES (?,?,?)');
-    $cols = implode(', ', TRIP_I18N_FIELDS);
-    $tr = $pdo->prepare("INSERT INTO trip_translations (trip_id, lang, $cols) VALUES (" . implode(', ', array_fill(0, count(TRIP_I18N_FIELDS) + 2, '?')) . ')');
     foreach ($services as $s) {
         $ar = $s['ar'];
         $exists->execute([$ar['title']]);
@@ -289,11 +287,8 @@ function seed_spa_services(PDO $pdo): void
         foreach ($s['gallery'] as $j => $g) {
             $img->execute([$id, $g, $j]);
         }
-        foreach (['en', 'ru', 'es'] as $lang) {
-            $row = $s[$lang] + ['includes' => $oils[$lang]];
-            $tr->execute([$id, $lang, ...array_map(fn($f) => (string)($row[$f] ?? ''), TRIP_I18N_FIELDS)]);
-        }
     }
+    seed_content_translations($pdo);
 }
 
 /**
@@ -303,6 +298,24 @@ function seed_spa_services(PDO $pdo): void
 function seed_content_translations(PDO $pdo): void
 {
     $data = require __DIR__ . '/seed_translations.php';
+    // spa services carry their own en / ru / es texts
+    $spa = require __DIR__ . '/seed_spa.php';
+    $oils = $spa['@oils'];
+    unset($spa['@oils']);
+    foreach ($spa as $s) {
+        foreach ($s as $lang => $tr) {
+            if (is_array($tr) && isset(LANGS[$lang]) && $lang !== DEFAULT_LANG && isset($tr['title'])) {
+                $data['trips'][$s['ar']['title']][$lang] = $tr + ['includes' => $oils[$lang] ?? ''];
+            }
+        }
+    }
+    // German for everything
+    $de = require __DIR__ . '/seed_de.php';
+    foreach (['trips', 'places'] as $kind) {
+        foreach ($de[$kind] as $arabic => $tr) {
+            $data[$kind][$arabic]['de'] = $tr;
+        }
+    }
     $jobs = [
         ['trips', 'title', 'trip_translations', 'trip_id', TRIP_I18N_FIELDS, $data['trips']],
         ['places', 'name', 'place_translations', 'place_id', PLACE_I18N_FIELDS, $data['places']],

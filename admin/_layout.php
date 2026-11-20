@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/includes/translate.php';
 header('X-Robots-Tag: noindex, nofollow');
 
 /**
- * Collapsible per-language fields (English / Russian / Spanish) posted as tr[lang][field].
+ * Collapsible per-language fields (English / German / Russian / Spanish) posted as tr[lang][field].
  * $labels: field => [label, type] with type input | short | long | list.
  */
 function translations_panel(string $title, array $labels, array $values, bool $compact = false, string $hint = ''): string

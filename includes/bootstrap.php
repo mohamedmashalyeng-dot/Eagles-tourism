@@ -8,7 +8,7 @@ declare(strict_types=1);
 define('ROOT', dirname(__DIR__));
 define('APP_VERSION', '1.1.0');
 /** Bumped when tables are added; ensure_schema() upgrades older installs on the next request. */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 /** Private folder next to (outside) the web root: config, install key and logs live here when the host allows it. */
 define('PRIVATE_DIR', dirname(ROOT) . '/eagles-private');
 
@@ -599,6 +599,7 @@ if (PHP_SAPI !== 'cli' && !defined('INSTALLER') && !is_installed()) {
  * One-time upgrades of existing installs, run on the first request after a deploy:
  *  v2 - translation tables + translations of the demo content
  *  v3 - spa services (massages, Turkish bath) and the WhatsApp / phone number 010 990 18664
+ *  v4 - German translations of the demo content and the spa services
  */
 function ensure_schema(): void
 {
@@ -625,6 +626,9 @@ function ensure_schema(): void
                 seed_spa_services($pdo);
                 save_setting('whatsapp', '201099018664');
                 save_setting('phone', '+20 10 99018664');
+            }
+            if ($v < 4) {
+                seed_content_translations($pdo); // adds every missing language (German) and the spa translations
             }
             save_setting('schema_version', (string)SCHEMA_VERSION);
             settings(true);
