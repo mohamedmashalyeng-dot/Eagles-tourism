@@ -43,9 +43,9 @@ echo page_banner($pageTitle, t('فريقنا جاهز للرد على استفس
             <ul class="contact-cards">
                 <li><span><?= icon('phone') ?></span><div><small><?= e(t('اتصل بنا')) ?></small><a href="tel:<?= e(preg_replace('/\s+/', '', setting('phone'))) ?>" dir="ltr"><?= e(setting('phone')) ?></a></div></li>
                 <li><span><?= icon('chat') ?></span><div><small><?= e(t('واتساب')) ?></small><a href="<?= e(whatsapp_link()) ?>" target="_blank" rel="noopener"><?= e(t('ابدأ المحادثة الآن')) ?></a></div></li>
-                <li><span><?= icon('mail') ?></span><div><small><?= e(t('البريد الإلكتروني')) ?></small><a href="mailto:<?= e(setting('email')) ?>"><?= e(setting('email')) ?></a></div></li>
+                <?php if (setting('email')): ?><li><span><?= icon('mail') ?></span><div><small><?= e(t('البريد الإلكتروني')) ?></small><a href="mailto:<?= e(setting('email')) ?>"><?= e(setting('email')) ?></a></div></li><?php endif; ?>
                 <li><span><?= icon('pin') ?></span><div><small><?= e(t('العنوان')) ?></small><p><?= e(setting('address')) ?></p></div></li>
-                <li><span><?= icon('clock') ?></span><div><small><?= e(t('مواعيد العمل')) ?></small><p><?= e(setting('working_hours')) ?></p></div></li>
+                <?php if (setting('working_hours')): ?><li><span><?= icon('clock') ?></span><div><small><?= e(t('مواعيد العمل')) ?></small><p><?= e(setting('working_hours')) ?></p></div></li><?php endif; ?>
             </ul>
         </div>
         <div class="contact-form card">
@@ -74,11 +74,6 @@ echo page_banner($pageTitle, t('فريقنا جاهز للرد على استفس
             <?php endif; ?>
         </div>
     </div>
-    <div class="container">
-        <div class="map">
-            <iframe title="<?= e(t('موقعنا على الخريطة')) ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-                    src="https://maps.google.com/maps?q=<?= rawurlencode(setting('map_query', 'Hurghada, Red Sea, Egypt')) ?>&z=13&hl=<?= e(lang()) ?>&output=embed"></iframe>
-        </div>
-    </div>
 </section>
+<?= locations_section() ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>

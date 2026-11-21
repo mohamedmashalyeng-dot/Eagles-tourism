@@ -8,7 +8,7 @@ declare(strict_types=1);
 define('ROOT', dirname(__DIR__));
 define('APP_VERSION', '1.1.0');
 /** Bumped when tables are added; ensure_schema() upgrades older installs on the next request. */
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 /** Private folder next to (outside) the web root: config, install key and logs live here when the host allows it. */
 define('PRIVATE_DIR', dirname(ROOT) . '/eagles-private');
 
@@ -16,6 +16,7 @@ mb_internal_encoding('UTF-8');
 date_default_timezone_set('Africa/Cairo');
 
 require __DIR__ . '/i18n.php';
+require __DIR__ . '/services.php';
 
 const TRIP_CATEGORIES = [
     'sea'    => 'رحلات بحرية',
@@ -26,6 +27,7 @@ const TRIP_CATEGORIES = [
     'family' => 'عائلية ومغامرات',
     'massage' => 'مساج',
     'hammam' => 'حمام تركي',
+    'beauty' => 'بيوتي',
 ];
 
 const BOOKING_STATUSES = [
@@ -176,22 +178,22 @@ const DEFAULT_SETTINGS = [
     'site_tagline'   => 'رحلات وسياحة الغردقة',
     'phone'          => '+20 10 99018664',
     'whatsapp'       => '201099018664',
-    'email'          => 'info@eagles-tourism.com',
-    'address'        => 'شارع الشيراتون، السقالة، الغردقة، البحر الأحمر، مصر',
+    'email'          => '',
+    'address'        => 'سنتر إيجلز — الأهرامات الثلاثة، الأحياء، الغردقة',
     'facebook'       => '',
     'instagram'      => '',
     'currency'       => 'ج.م',
     'hero_title'     => 'اكتشف سحر الغردقة مع إيجلز',
     'hero_subtitle'  => 'رحلات بحرية، سفاري، غوص، وجولات لا تُنسى على ساحل البحر الأحمر — بتنظيم احترافي وأسعار واضحة.',
     'hero_image'     => 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1920&q=80',
-    'about_text'     => 'إيجلز للسياحة شركة متخصصة في تنظيم الرحلات السياحية بمدينة الغردقة والبحر الأحمر. نؤمن أن كل رحلة يجب أن تكون تجربة آمنة ومريحة وممتعة، لذلك نختار أفضل اليخوت والمرشدين ونهتم بأدق التفاصيل من لحظة الحجز وحتى عودتك إلى فندقك.',
-    'working_hours'  => 'يومياً من 8 صباحاً حتى 11 مساءً',
+    'about_text'     => 'إيجلز في الغردقة: رحلات ومساج وبيوتي. تواصل معنا لمعرفة الخدمات المتاحة والأسعار وتأكيد تفاصيل حجزك.',
+    'working_hours'  => '',
     'map_query'      => 'Hurghada, Red Sea, Egypt',
-    'booking_policy' => "الدفع عند تأكيد الحجز\nإلغاء مجاني قبل الرحلة بـ 24 ساعة",
-    'stat_clients'   => '5000+',
-    'stat_rating'    => '4.9',
-    'stat_years'     => '10',
-    'testimonials'   => "أحمد م. | القاهرة | رحلة أورانج باي كانت رائعة، التنظيم ممتاز والمواعيد مضبوطة والأكل جميل جداً.\nسارة ك. | الإسكندرية | السفاري كانت تجربة مختلفة تماماً، الأطفال استمتعوا جداً بالجمال والعرض.\nDaniel R. | Germany | Great diving experience for beginners. The instructor was patient and professional.",
+    'booking_policy' => '',
+    'stat_clients'   => '',
+    'stat_rating'    => '',
+    'stat_years'     => '',
+    'testimonials'   => '',
     'meta_description' => 'إيجلز للسياحة - أفضل الرحلات البحرية والسفاري والغوص والمساج والحمام التركي في الغردقة بأسعار مميزة وخدمة احترافية.',
 ];
 
@@ -219,6 +221,9 @@ function settings(bool $reload = false): array
 function setting(string $key, string $default = ''): string
 {
     $s = settings();
+    if (array_key_exists($key, $s) && trim((string)$s[$key]) === '') {
+        return $default;
+    }
     $l = lang();
     if ($l !== DEFAULT_LANG && in_array($key, TRANSLATABLE_SETTINGS, true)) {
         $isDefault = ($s[$key] ?? '') === (DEFAULT_SETTINGS[$key] ?? null);
@@ -257,11 +262,12 @@ function e(mixed $v): string
     return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function price(float|int|string|null $amount): string
+function price(float|int|string|null $amount, ?string $currency = null): string
 {
     $amount = (float)$amount;
     $formatted = number_format($amount, fmod($amount, 1.0) == 0.0 ? 0 : 2);
-    return $formatted . ' ' . setting('currency', 'ج.م');
+    $currency = $currency ?: setting('currency', 'ج.م');
+    return $formatted . ' ' . ($currency === 'EUR' ? '€' : $currency);
 }
 
 function lines(?string $text): array
@@ -291,7 +297,7 @@ function whatsapp_link(string $message = ''): string
 /** Spa services are counted as sessions, not trips. */
 function is_spa_category(?string $key): bool
 {
-    return in_array($key, ['massage', 'hammam'], true);
+    return in_array($key, ['massage', 'hammam', 'beauty'], true);
 }
 
 /** "8 trips" / "3 sessions" in the current language. */
@@ -600,6 +606,7 @@ if (PHP_SAPI !== 'cli' && !defined('INSTALLER') && !is_installed()) {
  *  v2 - translation tables + translations of the demo content
  *  v3 - spa services (massages, Turkish bath) and the WhatsApp / phone number 010 990 18664
  *  v4 - German translations of the demo content and the spa services
+ *  v5 - confirmed prices, owner-supplied massage / beauty, and hidden demo content
  */
 function ensure_schema(): void
 {
@@ -629,6 +636,9 @@ function ensure_schema(): void
             }
             if ($v < 4) {
                 seed_content_translations($pdo); // adds every missing language (German) and the spa translations
+            }
+            if ($v < 5) {
+                upgrade_owner_content($pdo, db_driver());
             }
             save_setting('schema_version', (string)SCHEMA_VERSION);
             settings(true);

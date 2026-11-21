@@ -1,6 +1,22 @@
 <?php
 /** Spanish translations of the Arabic interface text (see t() in includes/i18n.php). */
 return [
+    'بيوتي' => 'Belleza',
+    'سعر الفرد' => 'Por persona',
+    'سنتر إيجلز — الأهرامات الثلاثة' => 'Centro Eagles — Tres Pirámides',
+    'رويال بيتش' => 'Royal Beach',
+    'بالما ريزورت' => 'Palma Resort',
+    'الأحياء' => 'Al Ahyaa',
+    'عناويننا في الأحياء' => 'Nuestras direcciones en Al Ahyaa',
+    'الأحياء، الغردقة، البحر الأحمر، مصر' => 'Al Ahyaa, Hurghada, Mar Rojo, Egipto',
+    'بحث العنوان على الخريطة' => 'Buscar dirección en el mapa',
+    'خريطة بحث: {name}' => 'Búsqueda en el mapa: {name}',
+    'رحلات وخدمات متاحة' => 'Excursiones y servicios disponibles',
+    'رحلاتنا وخدماتنا' => 'Nuestras excursiones y servicios',
+    'رحلات ومساج وبيوتي في الغردقة' => 'Excursiones, masajes y belleza en Hurghada',
+    'تصفح الرحلات والخدمات، وتواصل معنا لمعرفة التفاصيل وتأكيد الحجز.' => 'Descubre nuestras excursiones y servicios. Contáctanos para conocer los detalles y confirmar tu reserva.',
+    'تواصل معنا لمعرفة خدمات البيوتي المتاحة والأسعار.' => 'Consúltanos sobre los servicios de belleza disponibles y sus precios.',
+    'المساج والبيوتي في الغردقة — تواصل معنا للتفاصيل والحجز' => 'Masajes y belleza en Hurghada — contáctanos para detalles y reservas',
     '@plural' => [
         'trip'    => ['excursión', 'excursiones'],
         'session' => ['sesión', 'sesiones'],
@@ -8,14 +24,14 @@ return [
     // Built-in translations of the default settings; used while the Arabic setting still has its default value.
     '@settings' => [
         'site_tagline'     => 'Excursiones y tours en Hurghada',
-        'address'          => 'Calle Sheraton, Sakala, Hurghada, Mar Rojo, Egipto',
-        'working_hours'    => 'Todos los días de 8:00 a 23:00',
+        'address' => 'Centro Eagles — Tres Pirámides, Al Ahyaa, Hurghada',
+        'working_hours' => '',
         'currency'         => 'EGP',
         'hero_title'       => 'Descubre la magia de Hurghada con Eagles',
         'hero_subtitle'    => 'Excursiones en barco, safaris, buceo y tours inolvidables en la costa del Mar Rojo, con organización profesional y precios claros.',
-        'about_text'       => 'Eagles Tourism es una empresa especializada en organizar excursiones en Hurghada y el Mar Rojo. Creemos que cada viaje debe ser una experiencia segura, cómoda y divertida, por eso elegimos los mejores yates y guías y cuidamos cada detalle desde que reservas hasta que vuelves a tu hotel.',
-        'booking_policy'   => "Pago al confirmar la reserva\nCancelación gratuita hasta 24 horas antes de la excursión",
-        'testimonials'     => "Ahmed M. | El Cairo | La excursión a Orange Bay fue maravillosa: excelente organización, puntualidad y una comida muy rica.\nSara K. | Alejandría | El safari fue una experiencia totalmente distinta; a los niños les encantaron los camellos y el espectáculo.\nDaniel R. | Alemania | Una gran experiencia de buceo para principiantes. El instructor fue paciente y profesional.",
+        'about_text' => 'Eagles en Hurghada: excursiones, masajes y belleza. Contáctanos para conocer servicios disponibles, precios y detalles de reserva.',
+        'booking_policy' => '',
+        'testimonials' => '',
         'meta_description' => 'Eagles Tourism: las mejores excursiones en barco, safaris, buceo, masajes y baño turco en Hurghada a buen precio y con un servicio profesional.',
     ],
 

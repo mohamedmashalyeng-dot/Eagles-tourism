@@ -1,6 +1,22 @@
 <?php
 /** German translations of the Arabic interface text (see t() in includes/i18n.php). */
 return [
+    'بيوتي' => 'Beauty',
+    'سعر الفرد' => 'Pro Person',
+    'سنتر إيجلز — الأهرامات الثلاثة' => 'Eagles Center — Drei Pyramiden',
+    'رويال بيتش' => 'Royal Beach',
+    'بالما ريزورت' => 'Palma Resort',
+    'الأحياء' => 'Al Ahyaa',
+    'عناويننا في الأحياء' => 'Unsere Adressen in Al Ahyaa',
+    'الأحياء، الغردقة، البحر الأحمر، مصر' => 'Al Ahyaa, Hurghada, Rotes Meer, Ägypten',
+    'بحث العنوان على الخريطة' => 'Adresse auf der Karte suchen',
+    'خريطة بحث: {name}' => 'Kartensuche: {name}',
+    'رحلات وخدمات متاحة' => 'Verfügbare Ausflüge & Angebote',
+    'رحلاتنا وخدماتنا' => 'Unsere Ausflüge & Angebote',
+    'رحلات ومساج وبيوتي في الغردقة' => 'Ausflüge, Massage & Beauty in Hurghada',
+    'تصفح الرحلات والخدمات، وتواصل معنا لمعرفة التفاصيل وتأكيد الحجز.' => 'Entdecken Sie unsere Ausflüge und Angebote. Kontaktieren Sie uns für Details und Buchungsbestätigung.',
+    'تواصل معنا لمعرفة خدمات البيوتي المتاحة والأسعار.' => 'Kontaktieren Sie uns für verfügbare Beauty-Angebote und Preise.',
+    'المساج والبيوتي في الغردقة — تواصل معنا للتفاصيل والحجز' => 'Massage & Beauty in Hurghada — kontaktieren Sie uns für Details und Buchungen',
     '@plural' => [
         'trip'    => ['Ausflug', 'Ausflüge'],
         'session' => ['Anwendung', 'Anwendungen'],
@@ -8,14 +24,14 @@ return [
     // Built-in translations of the default settings; used while the Arabic setting still has its default value.
     '@settings' => [
         'site_tagline'     => 'Ausflüge & Touren in Hurghada',
-        'address'          => 'Sheraton Street, Sakala, Hurghada, Rotes Meer, Ägypten',
-        'working_hours'    => 'Täglich von 8 bis 23 Uhr',
+        'address' => 'Eagles Center — Drei Pyramiden, Al Ahyaa, Hurghada',
+        'working_hours' => '',
         'currency'         => 'EGP',
         'hero_title'       => 'Entdecke den Zauber von Hurghada mit Eagles',
         'hero_subtitle'    => 'Bootsausflüge, Safaris, Tauchen und unvergessliche Touren an der Küste des Roten Meeres — professionell organisiert.',
-        'about_text'       => 'Eagles Tourism ist auf die Organisation von Ausflügen in Hurghada und am Roten Meer spezialisiert. Jeder Ausflug soll sicher, bequem und ein echtes Vergnügen sein. Deshalb wählen wir die besten Yachten und Guides aus und kümmern uns um jedes Detail – von der Buchung bis zur Rückkehr in dein Hotel.',
-        'booking_policy'   => "Bezahlung nach Bestätigung der Buchung\nKostenlose Stornierung bis 24 Stunden vor dem Ausflug",
-        'testimonials'     => "Ahmed M. | Kairo | Der Ausflug nach Orange Bay war großartig – perfekte Organisation, pünktlich und sehr gutes Essen.\nSara K. | Alexandria | Die Safari war ein ganz besonderes Erlebnis, die Kinder waren von den Kamelen und der Show begeistert.\nDaniel R. | Deutschland | Tolles Taucherlebnis für Anfänger. Der Tauchlehrer war geduldig und professionell.",
+        'about_text' => 'Eagles in Hurghada: Ausflüge, Massage und Beauty. Kontaktieren Sie uns für verfügbare Angebote, Preise und Buchungsdetails.',
+        'booking_policy' => '',
+        'testimonials' => '',
         'meta_description' => 'Eagles Tourism – die besten Bootsausflüge, Safaris, Tauchgänge, Massagen und das türkische Bad in Hurghada mit professionellem Service.',
     ],
 

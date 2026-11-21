@@ -29,10 +29,10 @@ $st->execute($params);
 $trips = localize_trips($st->fetchAll());
 
 $pageTitle = $cat ? category_label($cat) : t('الرحلات');
-$activeNav = 'trips';
+$activeNav = in_array($cat, ['massage', 'beauty'], true) ? $cat : 'trips';
 require __DIR__ . '/includes/header.php';
 echo page_banner($pageTitle, is_spa_category($cat)
-    ? t('جلسات مساج وحمام تركي بزيوت طبيعية 100% لراحة واسترخاء تام')
+    ? t('المساج والبيوتي في الغردقة — تواصل معنا للتفاصيل والحجز')
     : t('اختر رحلتك من بين أفضل الرحلات البحرية والصحراوية والتاريخية في الغردقة'));
 ?>
 <section class="section">

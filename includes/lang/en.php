@@ -1,6 +1,22 @@
 <?php
 /** English translations of the Arabic interface text (see t() in includes/i18n.php). */
 return [
+    'بيوتي' => 'Beauty',
+    'سعر الفرد' => 'Per person',
+    'سنتر إيجلز — الأهرامات الثلاثة' => 'Eagles Center — Three Pyramids',
+    'رويال بيتش' => 'Royal Beach',
+    'بالما ريزورت' => 'Palma Resort',
+    'الأحياء' => 'Al Ahyaa',
+    'عناويننا في الأحياء' => 'Our addresses in Al Ahyaa',
+    'الأحياء، الغردقة، البحر الأحمر، مصر' => 'Al Ahyaa, Hurghada, Red Sea, Egypt',
+    'بحث العنوان على الخريطة' => 'Search address on the map',
+    'خريطة بحث: {name}' => 'Map search: {name}',
+    'رحلات وخدمات متاحة' => 'Available trips & services',
+    'رحلاتنا وخدماتنا' => 'Our trips & services',
+    'رحلات ومساج وبيوتي في الغردقة' => 'Trips, massage & beauty in Hurghada',
+    'تصفح الرحلات والخدمات، وتواصل معنا لمعرفة التفاصيل وتأكيد الحجز.' => 'Browse our trips and services. Contact us for details and booking confirmation.',
+    'تواصل معنا لمعرفة خدمات البيوتي المتاحة والأسعار.' => 'Contact us for available beauty services and prices.',
+    'المساج والبيوتي في الغردقة — تواصل معنا للتفاصيل والحجز' => 'Massage & beauty in Hurghada — contact us for details and booking',
     '@plural' => [
         'trip'    => ['trip', 'trips'],
         'session' => ['session', 'sessions'],
@@ -8,14 +24,14 @@ return [
     // Built-in translations of the default settings; used while the Arabic setting still has its default value.
     '@settings' => [
         'site_tagline'     => 'Hurghada Trips & Tours',
-        'address'          => 'Sheraton Street, Sakala, Hurghada, Red Sea, Egypt',
-        'working_hours'    => 'Daily from 8 AM to 11 PM',
+        'address' => 'Eagles Center — Three Pyramids, Al Ahyaa, Hurghada',
+        'working_hours' => '',
         'currency'         => 'EGP',
         'hero_title'       => 'Discover the Magic of Hurghada with Eagles',
         'hero_subtitle'    => 'Sea trips, safaris, diving and unforgettable tours on the Red Sea coast — professionally organized with clear prices.',
-        'about_text'       => 'Eagles Tourism is a company specialized in organizing tours in Hurghada and the Red Sea. We believe every trip should be a safe, comfortable and enjoyable experience, so we choose the best yachts and guides and take care of every detail from the moment you book until you are back at your hotel.',
-        'booking_policy'   => "Pay when your booking is confirmed\nFree cancellation up to 24 hours before the trip",
-        'testimonials'     => "Ahmed M. | Cairo | The Orange Bay trip was amazing — excellent organization, on-time schedule and very good food.\nSara K. | Alexandria | The safari was a completely different experience; the kids loved the camels and the show.\nDaniel R. | Germany | Great diving experience for beginners. The instructor was patient and professional.",
+        'about_text' => 'Eagles in Hurghada: trips, massage and beauty. Contact us for available services, prices and booking details.',
+        'booking_policy' => '',
+        'testimonials' => '',
         'meta_description' => 'Eagles Tourism - the best sea trips, safaris, diving, massage and Turkish bath in Hurghada at great prices with professional service.',
     ],
 

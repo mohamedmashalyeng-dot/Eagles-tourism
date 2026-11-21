@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$d || $d->format('Y-m-d') !== $f['date'] || $f['date'] < date('Y-m-d')) $errors[] = t('برجاء اختيار تاريخ رحلة صحيح.');
 
     if (!$errors) {
-        $total = 0; // prices are not shown on the site; the team quotes on WhatsApp
+        $total = 0; // Booking request: the team confirms the total, including any children, on WhatsApp.
         // the dashboard is Arabic: keep the Arabic trip name and note the visitor's language
         $notes = $f['notes'];
         if (lang() !== DEFAULT_LANG) {
@@ -82,7 +82,7 @@ $itinerary = lines($trip['itinerary']);
 $pageTitle = $trip['title'];
 $pageDesc  = excerpt($trip['short_description'], 155);
 $ogImage   = $trip['cover_image'];
-$activeNav = 'trips';
+$activeNav = in_array($trip['category'], ['massage', 'beauty'], true) ? $trip['category'] : 'trips';
 require __DIR__ . '/includes/header.php';
 echo page_banner($trip['title'], category_label($trip['category']) . ($trip['location'] ? ' · ' . $trip['location'] : ''), $trip['cover_image']);
 
@@ -151,10 +151,14 @@ $waMsg = t('مرحباً، أريد الاستفسار عن سعر وحجز: {tr
         <aside class="trip-aside" id="book">
             <div class="book-card">
                 <div class="book-card__price">
+                    <?php if (has_public_price($trip)): ?>
+                    <small><?= e(t('سعر الفرد')) ?></small>
+                    <strong><?= e(public_price($trip)) ?></strong>
+                    <?php else: ?>
                     <small><?= e(t('الأسعار والعروض')) ?></small>
                     <strong><?= e(t('اسأل على واتساب')) ?></strong>
-                    <span><?= e(t('ابعتلنا وهنرد عليك بالسعر وأفضل عرض متاح فوراً.')) ?></span>
-                    <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($waMsg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('اسأل عن السعر على واتساب')) ?></a>
+                    <?php endif; ?>
+                    <a class="btn btn-wa btn-block" href="<?= e(whatsapp_link($waMsg)) ?>" target="_blank" rel="noopener"><?= icon('chat') ?> <?= e(t('تواصل عبر واتساب')) ?></a>
                 </div>
 
                 <?php if ($booked): ?>

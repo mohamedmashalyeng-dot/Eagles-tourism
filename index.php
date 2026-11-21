@@ -14,7 +14,7 @@ $activeNav = 'home';
 $ogImage = setting('hero_image');
 require __DIR__ . '/includes/header.php';
 
-$catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' => 'award', 'city' => 'pin', 'family' => 'heart', 'massage' => 'feather', 'hammam' => 'droplet'];
+$catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' => 'award', 'city' => 'pin', 'family' => 'heart', 'massage' => 'feather', 'hammam' => 'droplet', 'beauty' => 'heart'];
 ?>
 
 <section class="hero" style="--bg:url('<?= e(img_src(setting('hero_image'))) ?>')">
@@ -47,10 +47,10 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
 
 <section class="stats">
     <div class="container stats__grid">
-        <div class="stat"><strong><?= max($tripCount, 1) ?>+</strong><span><?= e(t('رحلة مميزة')) ?></span></div>
-        <div class="stat"><strong><?= e(setting('stat_clients', '5000+')) ?></strong><span><?= e(t('عميل سعيد')) ?></span></div>
-        <div class="stat"><strong><?= e(setting('stat_rating', '4.9')) ?></strong><span><?= e(t('تقييم العملاء')) ?></span></div>
-        <div class="stat"><strong>24/7</strong><span><?= e(t('دعم ومتابعة')) ?></span></div>
+        <div class="stat"><strong><?= $tripCount ?></strong><span><?= e(t('رحلات وخدمات متاحة')) ?></span></div>
+        <div class="stat"><strong><?= count(business_locations()) ?></strong><span><?= e(t('عناويننا في الأحياء')) ?></span></div>
+        <?php if ($clients = setting('stat_clients')): ?><div class="stat"><strong><?= e($clients) ?></strong><span><?= e(t('عميل سعيد')) ?></span></div><?php endif; ?>
+        <?php if ($rating = setting('stat_rating')): ?><div class="stat"><strong><?= e($rating) ?></strong><span><?= e(t('تقييم العملاء')) ?></span></div><?php endif; ?>
     </div>
 </section>
 
@@ -58,9 +58,9 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
     <div class="container">
         <div class="section-head">
             <div>
-                <span class="kicker"><?= e(t('رحلاتنا المميزة')) ?></span>
-                <h2><?= e(t('أشهر الرحلات في الغردقة')) ?></h2>
-                <p><?= e(t('اخترنا لك أكثر الرحلات طلباً، مع الانتقالات من وإلى فندقك. اسألنا عن الأسعار والعروض على واتساب.')) ?></p>
+                <span class="kicker"><?= e(t('رحلاتنا وخدماتنا')) ?></span>
+                <h2><?= e(t('رحلات ومساج وبيوتي في الغردقة')) ?></h2>
+                <p><?= e(t('تصفح الرحلات والخدمات، وتواصل معنا لمعرفة التفاصيل وتأكيد الحجز.')) ?></p>
             </div>
             <a href="<?= e(url('trips.php')) ?>" class="btn btn-outline"><?= e(t('كل الرحلات')) ?> <?= icon('arrow') ?></a>
         </div>
@@ -124,17 +124,16 @@ $catIcons = ['sea' => 'anchor', 'safari' => 'sun', 'diving' => 'compass', 'day' 
             <h2><?= e(t('لماذا تختار إيجلز للسياحة؟')) ?></h2>
             <p><?= nl2br(e(setting('about_text'))) ?></p>
             <ul class="features">
-                <li><span><?= icon('shield') ?></span><div><strong><?= e(t('أمان وتأمين كامل')) ?></strong><small><?= e(t('يخوت مرخصة ومرشدون ومنقذون محترفون في كل رحلة.')) ?></small></div></li>
-                <li><span><?= icon('tag') ?></span><div><strong><?= e(t('أفضل عرض على واتساب')) ?></strong><small><?= e(t('ابعتلنا وهنرد عليك بالسعر وأفضل عرض متاح فوراً.')) ?></small></div></li>
-                <li><span><?= icon('users') ?></span><div><strong><?= e(t('فريق محلي خبير')) ?></strong><small><?= e(t('نعرف الغردقة جيداً ونرشح لك الأنسب لك ولعائلتك.')) ?></small></div></li>
-                <li><span><?= icon('chat') ?></span><div><strong><?= e(t('حجز سهل وسريع')) ?></strong><small><?= e(t('احجز من الموقع أو عبر واتساب وسنتواصل معك فوراً.')) ?></small></div></li>
+                <li><span><?= icon('feather') ?></span><div><strong><?= e(category_label('massage')) ?></strong><small><a href="<?= e(url('trips.php?cat=massage')) ?>"><?= e(t('التفاصيل')) ?></a></small></div></li>
+                <li><span><?= icon('heart') ?></span><div><strong><?= e(category_label('beauty')) ?></strong><small><?= e(t('تواصل معنا لمعرفة خدمات البيوتي المتاحة والأسعار.')) ?></small></div></li>
+                <li><span><?= icon('chat') ?></span><div><strong><?= e(t('تواصل عبر واتساب')) ?></strong><small><?= e(t('تصفح الرحلات والخدمات، وتواصل معنا لمعرفة التفاصيل وتأكيد الحجز.')) ?></small></div></li>
             </ul>
         </div>
         <div class="about__media">
             <?php $aboutImgs = array_slice(array_column($places, 'image'), 1, 2); ?>
             <?= img_tag($aboutImgs[0] ?? setting('hero_image'), t('رحلات إيجلز في الغردقة'), 'about__img1') ?>
             <?= img_tag($aboutImgs[1] ?? setting('hero_image'), t('البحر الأحمر'), 'about__img2') ?>
-            <div class="about__badge"><strong>+<?= e(setting('stat_years', '10')) ?></strong><small><?= e(t('سنوات خبرة')) ?><br><?= e(t('في البحر الأحمر')) ?></small></div>
+            <?php if ($years = setting('stat_years')): ?><div class="about__badge"><strong><?= e($years) ?></strong><small><?= e(t('سنوات خبرة')) ?><br><?= e(t('في البحر الأحمر')) ?></small></div><?php endif; ?>
         </div>
     </div>
 </section>
@@ -154,7 +153,6 @@ if ($reviews): ?>
         <div class="reviews">
             <?php foreach (array_slice($reviews, 0, 6) as [$name, $from, $text]): ?>
                 <figure class="review">
-                    <div class="review__stars"><?= str_repeat(icon('star'), 5) ?></div>
                     <blockquote><?= e($text) ?></blockquote>
                     <figcaption><span class="review__avatar"><?= e(mb_substr($name, 0, 1)) ?></span><div><strong><?= e($name) ?></strong><small><?= e($from) ?></small></div></figcaption>
                 </figure>
@@ -177,4 +175,5 @@ if ($reviews): ?>
     </div>
 </section>
 
+<?= locations_section() ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>

@@ -8,6 +8,7 @@ $trip = [
     'id' => 0, 'title' => '', 'category' => 'sea', 'short_description' => '', 'description' => '', 'duration' => '', 'location' => '',
     'pickup_time' => '', 'group_size' => '', 'price_adult' => '', 'price_child' => '', 'old_price' => '', 'includes' => '', 'excludes' => '',
     'itinerary' => '', 'cover_image' => '', 'is_featured' => 0, 'is_active' => 1, 'sort_order' => 0,
+    'price_confirmed' => 0, 'price_currency' => '',
 ];
 if ($id) {
     $st = $pdo->prepare('SELECT * FROM trips WHERE id = ?');
@@ -40,6 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         'price_adult' => (float)str_replace(',', '', $in('price_adult')),
         'price_child' => (float)str_replace(',', '', $in('price_child')),
         'old_price' => (float)str_replace(',', '', $in('old_price')),
+        'price_confirmed' => isset($_POST['price_confirmed']) ? 1 : 0,
+        'price_currency' => in_array($in('price_currency'), ['', 'EUR', 'USD', 'EGP'], true) ? $in('price_currency') : '',
         'includes' => $in('includes'),
         'excludes' => $in('excludes'),
         'itinerary' => $in('itinerary'),
@@ -49,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && (int)($_SERVER['CO
         'cover_image' => $trip['cover_image'],
     ];
     if (mb_strlen($data['title']) < 3) $errors[] = 'اكتب اسم الرحلة.';
+    if ($data['price_confirmed'] && $data['price_adult'] <= 0) $errors[] = 'اكتب سعراً صحيحاً أكبر من صفر قبل تأكيده للنشر.';
     if ($data['short_description'] === '') $errors[] = 'اكتب وصفاً مختصراً للرحلة.';
     $coverUrl = $in('cover_url');
     if ($coverUrl !== '' && !preg_match('#^https?://#i', $coverUrl)) $errors[] = 'رابط صورة الغلاف يجب أن يبدأ بـ http أو https.';
@@ -217,8 +221,10 @@ admin_header($id ? 'تعديل رحلة' : 'إضافة رحلة جديدة', 'tr
         </section>
 
         <section class="panel">
-            <h2 class="panel__title">التكلفة (<?= e(setting('currency', 'ج.م')) ?>)</h2>
-            <p class="hint">للاستخدام الداخلي بس — الأسعار مش بتظهر على الموقع، والزوار بيسألوا عليها في واتساب.</p>
+            <h2 class="panel__title">السعر والعملة</h2>
+            <p class="hint">السعر يظهر للزوار بعد تأكيد صحته فقط. الأسعار التجريبية والخصومات لا تُعرض. سعر الطفل يظل للاستفسار.</p>
+            <div class="field"><label>عملة السعر</label><select name="price_currency"><?php foreach (['' => 'عملة الموقع', 'EUR' => 'يورو (€)', 'USD' => 'دولار (USD)', 'EGP' => 'جنيه مصري (EGP)'] as $code => $label): ?><option value="<?= e($code) ?>" <?= $trip['price_currency'] === $code ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?></select></div>
+            <label class="check"><input type="checkbox" name="price_confirmed" value="1" <?= $trip['price_confirmed'] ? 'checked' : '' ?>> أؤكد أن سعر الفرد صحيح ومتاح للحجز، وأريد إظهاره للزوار</label>
             <div class="field"><label>سعر الفرد (بالغ)</label><input name="price_adult" type="number" step="0.01" min="0" value="<?= e($num($trip['price_adult'])) ?>"></div>
             <div class="field"><label>سعر الطفل</label><input name="price_child" type="number" step="0.01" min="0" value="<?= e($num($trip['price_child'])) ?>"></div>
             <div class="field"><label>السعر قبل الخصم <small>(اختياري)</small></label><input name="old_price" type="number" step="0.01" min="0" value="<?= e($num($trip['old_price'])) ?>"></div>

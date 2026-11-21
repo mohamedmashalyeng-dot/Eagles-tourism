@@ -37,10 +37,12 @@
         <div class="footer-col">
             <h4><?= e(t('تواصل معنا')) ?></h4>
             <ul class="contact-list">
-                <li><?= icon('pin') ?><span><?= e(setting('address')) ?></span></li>
+                <?php foreach (business_locations() as $location): ?>
+                <li><?= icon('pin') ?><a href="<?= e(url('contact.php#locations')) ?>"><?= e($location['name']) ?> — <?= e(t('الأحياء')) ?></a></li>
+                <?php endforeach; ?>
                 <li><?= icon('phone') ?><a href="tel:<?= e(preg_replace('/\s+/', '', setting('phone'))) ?>" dir="ltr"><?= e(setting('phone')) ?></a></li>
-                <li><?= icon('mail') ?><a href="mailto:<?= e(setting('email')) ?>"><?= e(setting('email')) ?></a></li>
-                <li><?= icon('clock') ?><span><?= e(setting('working_hours')) ?></span></li>
+                <?php if (setting('email')): ?><li><?= icon('mail') ?><a href="mailto:<?= e(setting('email')) ?>"><?= e(setting('email')) ?></a></li><?php endif; ?>
+                <?php if (setting('working_hours')): ?><li><?= icon('clock') ?><span><?= e(setting('working_hours')) ?></span></li><?php endif; ?>
             </ul>
         </div>
     </div>

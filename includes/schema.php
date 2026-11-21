@@ -32,6 +32,8 @@ function install_schema(PDO $pdo, string $driver): void
             price_adult DECIMAL(10,2) NOT NULL DEFAULT 0,
             price_child DECIMAL(10,2) NOT NULL DEFAULT 0,
             old_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+            price_confirmed TINYINT NOT NULL DEFAULT 0,
+            price_currency VARCHAR(12) NOT NULL DEFAULT '',
             includes TEXT,
             excludes TEXT,
             itinerary TEXT,
@@ -119,16 +121,122 @@ function install_schema(PDO $pdo, string $driver): void
     }
 }
 
+/** Idempotent upgrade: keep edited business content, hide untouched examples, add owner-supplied services. */
+function upgrade_owner_content(PDO $pdo, string $driver): void
+{
+    $columns = $driver === 'sqlite'
+        ? array_column($pdo->query('PRAGMA table_info(trips)')->fetchAll(PDO::FETCH_ASSOC), 'name')
+        : array_column($pdo->query('SHOW COLUMNS FROM trips')->fetchAll(PDO::FETCH_ASSOC), 'Field');
+    foreach (['price_confirmed' => 'TINYINT NOT NULL DEFAULT 0', 'price_currency' => "VARCHAR(12) NOT NULL DEFAULT ''"] as $name => $type) {
+        if (!in_array($name, $columns, true)) $pdo->exec("ALTER TABLE trips ADD COLUMN $name $type");
+    }
+
+    $pdo->beginTransaction();
+    try {
+        // Compare every original field, gallery and translation before hiding a demo.
+        $translations = (require __DIR__ . '/seed_translations.php')['trips'];
+        $german = (require __DIR__ . '/seed_de.php')['trips'];
+        foreach (sample_trips() as $i => $sample) {
+            $expected = ['title' => $sample['title'], 'category' => $sample['category'], 'short_description' => $sample['short'],
+                'description' => $sample['desc'], 'duration' => $sample['duration'], 'location' => $sample['location'],
+                'pickup_time' => $sample['pickup'], 'group_size' => $sample['group'], 'price_adult' => $sample['adult'],
+                'price_child' => $sample['child'], 'old_price' => $sample['old'], 'includes' => $sample['inc'],
+                'excludes' => $sample['exc'], 'itinerary' => $sample['itin'], 'cover_image' => $sample['cover'],
+                'is_featured' => $sample['featured'], 'sort_order' => $i + 1];
+            $tr = $translations[$sample['title']] ?? [];
+            if (isset($german[$sample['title']])) $tr['de'] = $german[$sample['title']];
+            hide_untouched_demo_trip($pdo, $expected, $sample['gallery'], $tr);
+        }
+        $spa = require __DIR__ . '/seed_spa.php';
+        $oils = $spa['@oils'];
+        unset($spa['@oils']);
+        foreach ($spa as $sample) {
+            $ar = $sample['ar'];
+            $expected = ['title' => $ar['title'], 'category' => $sample['category'], 'short_description' => $ar['short_description'],
+                'description' => $ar['description'], 'duration' => $ar['duration'], 'location' => '', 'pickup_time' => '',
+                'group_size' => '', 'price_adult' => 0, 'price_child' => 0, 'old_price' => 0, 'includes' => $ar['includes'] ?? $oils['ar'],
+                'excludes' => '', 'itinerary' => $ar['itinerary'] ?? '', 'cover_image' => $sample['cover'],
+                'is_featured' => $sample['featured'], 'sort_order' => $sample['sort']];
+            $tr = [];
+            foreach (LANGS as $code => $_) {
+                if ($code !== DEFAULT_LANG && isset($sample[$code])) $tr[$code] = $sample[$code] + ['includes' => $oils[$code] ?? ''];
+            }
+            if (isset($german[$ar['title']])) $tr['de'] = $german[$ar['title']];
+            hide_untouched_demo_trip($pdo, $expected, $sample['gallery'], $tr);
+        }
+        $hidePlace = $pdo->prepare('UPDATE places SET is_active = 0 WHERE name = ? AND description = ? AND image = ?');
+        foreach (sample_places() as $sample) $hidePlace->execute($sample);
+
+        $legacy = [
+            'stat_clients' => '5000+', 'stat_rating' => '4.9', 'stat_years' => '10',
+            'testimonials' => "أحمد م. | القاهرة | رحلة أورانج باي كانت رائعة، التنظيم ممتاز والمواعيد مضبوطة والأكل جميل جداً.\nسارة ك. | الإسكندرية | السفاري كانت تجربة مختلفة تماماً، الأطفال استمتعوا جداً بالجمال والعرض.\nDaniel R. | Germany | Great diving experience for beginners. The instructor was patient and professional.",
+            'address' => 'شارع الشيراتون، السقالة، الغردقة، البحر الأحمر، مصر',
+            'email' => 'info@eagles-tourism.com',
+            'working_hours' => 'يومياً من 8 صباحاً حتى 11 مساءً',
+            'booking_policy' => "الدفع عند تأكيد الحجز\nإلغاء مجاني قبل الرحلة بـ 24 ساعة",
+            'about_text' => 'إيجلز للسياحة شركة متخصصة في تنظيم الرحلات السياحية بمدينة الغردقة والبحر الأحمر. نؤمن أن كل رحلة يجب أن تكون تجربة آمنة ومريحة وممتعة، لذلك نختار أفضل اليخوت والمرشدين ونهتم بأدق التفاصيل من لحظة الحجز وحتى عودتك إلى فندقك.',
+        ];
+        $reset = $pdo->prepare('UPDATE settings SET svalue = ? WHERE skey = ? AND svalue = ?');
+        foreach ($legacy as $key => $old) $reset->execute([DEFAULT_SETTINGS[$key], $key, $old]);
+
+        $find = $pdo->prepare('SELECT id FROM trips WHERE title = ? AND category = ?');
+        $insert = $pdo->prepare('INSERT INTO trips (title, category, short_description, description, duration, includes, price_adult, price_confirmed, price_currency, is_featured, is_active, sort_order, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,1,1,0,?,?)');
+        $fields = implode(', ', TRIP_I18N_FIELDS);
+        $translation = $pdo->prepare("INSERT INTO trip_translations (trip_id, lang, $fields) VALUES (" . implode(',', array_fill(0, count(TRIP_I18N_FIELDS) + 2, '?')) . ')');
+        foreach (owner_services() as $service) {
+            $ar = $service['ar'];
+            $find->execute([$ar['title'], $service['category']]);
+            if ($find->fetchColumn()) continue;
+            $insert->execute([$ar['title'], $service['category'], $ar['short_description'], $ar['short_description'], $ar['duration'] ?? '', $ar['includes'] ?? '', $service['price'], $service['price'] > 0 ? 1 : 0, $service['currency'], now(), now()]);
+            $id = (int)$pdo->lastInsertId();
+            foreach (LANGS as $code => $_) {
+                if ($code === DEFAULT_LANG) continue;
+                $tr = $service[$code];
+                $tr['description'] = $tr['short_description'];
+                $translation->execute([$id, $code, ...array_map(fn($field) => $tr[$field] ?? '', TRIP_I18N_FIELDS)]);
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $error) {
+        $pdo->rollBack();
+        throw $error;
+    }
+}
+
+/** Hide only a byte-for-byte example; preserve edits, including translated copy and images. */
+function hide_untouched_demo_trip(PDO $pdo, array $expected, array $gallery, array $translations): void
+{
+    $find = $pdo->prepare('SELECT * FROM trips WHERE title = ? AND price_confirmed = 0');
+    $find->execute([$expected['title']]);
+    foreach ($find->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($expected as $key => $value) {
+            $equal = in_array($key, ['price_adult', 'price_child', 'old_price'], true)
+                ? (float)$row[$key] === (float)$value : (string)$row[$key] === (string)$value;
+            if (!$equal) continue 2;
+        }
+        $images = $pdo->prepare('SELECT path FROM trip_images WHERE trip_id = ? ORDER BY sort_order, id');
+        $images->execute([$row['id']]);
+        if ($images->fetchAll(PDO::FETCH_COLUMN) !== $gallery) continue;
+        $texts = $pdo->prepare('SELECT * FROM trip_translations WHERE trip_id = ?');
+        $texts->execute([$row['id']]);
+        foreach ($texts->fetchAll(PDO::FETCH_ASSOC) as $text) {
+            if (!isset($translations[$text['lang']])) continue 2;
+            foreach (TRIP_I18N_FIELDS as $key) {
+                if ((string)$text[$key] !== (string)($translations[$text['lang']][$key] ?? '')) continue 3;
+            }
+        }
+        $pdo->prepare('UPDATE trips SET is_active = 0 WHERE id = ?')->execute([$row['id']]);
+    }
+}
+
 function u(string $id, int $w = 1600): string
 {
     return "https://images.unsplash.com/photo-$id?auto=format&fit=crop&w=$w&q=80";
 }
 
-function seed_sample_content(PDO $pdo): void
+function sample_trips(): array
 {
-    $now = date('Y-m-d H:i:s');
-
-    $trips = [
+    return [
         [
             'title' => 'رحلة جزيرة أورانج باي',
             'category' => 'sea',
@@ -235,8 +343,14 @@ function seed_sample_content(PDO $pdo): void
         ],
     ];
 
+}
+
+function seed_sample_content(PDO $pdo): void
+{
+    $now = date('Y-m-d H:i:s');
+    $trips = sample_trips();
     $ins = $pdo->prepare('INSERT INTO trips (title, category, short_description, description, duration, location, pickup_time, group_size, price_adult, price_child, old_price, includes, excludes, itinerary, cover_image, is_featured, is_active, sort_order, created_at, updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?)');
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?,?)');
     $img = $pdo->prepare('INSERT INTO trip_images (trip_id, path, sort_order) VALUES (?,?,?)');
     foreach ($trips as $i => $t) {
         $ins->execute([$t['title'], $t['category'], $t['short'], $t['desc'], $t['duration'], $t['location'], $t['pickup'], $t['group'],
@@ -247,7 +361,17 @@ function seed_sample_content(PDO $pdo): void
         }
     }
 
-    $places = [
+    $places = sample_places();
+    $p = $pdo->prepare('INSERT INTO places (name, description, image, is_active, sort_order, created_at) VALUES (?,?,?,0,?,?)');
+    foreach ($places as $i => [$name, $desc, $image]) {
+        $p->execute([$name, $desc, $image, $i + 1, $now]);
+    }
+    seed_content_translations($pdo);
+}
+
+function sample_places(): array
+{
+    return [
         ['جزيرة الجفتون', 'محمية طبيعية تضم بعضاً من أجمل الشعاب المرجانية والشواطئ البيضاء في البحر الأحمر.', u('1519046904884-53103b34b206', 1200)],
         ['أورانج باي', 'شاطئ ساحر بمياه فيروزية ورمال ناعمة، من أشهر وجهات التصوير في الغردقة.', u('1507525428034-b723cf961d3e', 1200)],
         ['مارينا الغردقة', 'واجهة بحرية حديثة تضم اليخوت والمطاعم والكافيهات، وأجمل مكان للتمشية مساءً.', u('1567899378494-47b22a2ae96a', 1200)],
@@ -257,11 +381,6 @@ function seed_sample_content(PDO $pdo): void
         ['الجونة', 'مدينة المنتجعات والقنوات المائية شمال الغردقة، بطابعها المعماري المميز.', u('1548574505-5e239809ee19', 1200)],
         ['شاطئ البحر الأحمر', 'شمس مشرقة طوال العام وشواطئ ممتدة تجعل الغردقة وجهة مثالية لكل الفصول.', u('1559128010-7c1ad6e1b6a5', 1200)],
     ];
-    $p = $pdo->prepare('INSERT INTO places (name, description, image, is_active, sort_order, created_at) VALUES (?,?,?,1,?,?)');
-    foreach ($places as $i => [$name, $desc, $image]) {
-        $p->execute([$name, $desc, $image, $i + 1, $now]);
-    }
-    seed_content_translations($pdo);
 }
 
 /** Adds the spa services (massages, Turkish bath) with their translations; skips any whose Arabic title already exists. */

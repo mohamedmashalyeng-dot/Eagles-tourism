@@ -8,6 +8,8 @@ $curLang   = lang();
 $nav = [
     'home'    => [t('الرئيسية'), ''],
     'trips'   => [t('الرحلات'), 'trips.php'],
+    'massage' => [t('مساج'), 'trips.php?cat=massage'],
+    'beauty'  => [t('بيوتي'), 'trips.php?cat=beauty'],
     'gallery' => [t('معالم الغردقة'), 'gallery.php'],
     'about'   => [t('من نحن'), 'index.php#about'],
     'contact' => [t('تواصل معنا'), 'contact.php'],
@@ -50,10 +52,10 @@ header('Content-Language: ' . $curLang);
         <div class="container topbar__inner">
             <div class="topbar__info">
                 <a href="tel:<?= e(preg_replace('/\s+/', '', setting('phone'))) ?>"><?= icon('phone') ?><span dir="ltr"><?= e(setting('phone')) ?></span></a>
-                <a href="mailto:<?= e(setting('email')) ?>" class="hide-sm"><?= icon('mail') ?><?= e(setting('email')) ?></a>
+                <?php if (setting('email')): ?><a href="mailto:<?= e(setting('email')) ?>" class="hide-sm"><?= icon('mail') ?><?= e(setting('email')) ?></a><?php endif; ?>
             </div>
             <div class="topbar__info">
-                <span class="hide-sm"><?= icon('clock') ?><?= e(setting('working_hours')) ?></span>
+                <?php if (setting('working_hours')): ?><span class="hide-sm"><?= icon('clock') ?><?= e(setting('working_hours')) ?></span><?php endif; ?>
                 <?php if (setting('facebook')): ?><a href="<?= e(setting('facebook')) ?>" target="_blank" rel="noopener" aria-label="<?= e(t('فيسبوك')) ?>"><?= icon('facebook') ?></a><?php endif; ?>
                 <?php if (setting('instagram')): ?><a href="<?= e(setting('instagram')) ?>" target="_blank" rel="noopener" aria-label="<?= e(t('إنستجرام')) ?>"><?= icon('instagram') ?></a><?php endif; ?>
             </div>

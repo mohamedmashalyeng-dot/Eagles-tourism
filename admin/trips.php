@@ -53,7 +53,7 @@ admin_header('الرحلات', 'trips');
                         </div>
                     </td>
                     <td><?= e(category_label($t['category'])) ?></td>
-                    <td><strong><?= e(price($t['price_adult'])) ?></strong><?php if ((float)$t['price_child'] > 0): ?><br><small class="muted">طفل: <?= e(price($t['price_child'])) ?></small><?php endif; ?></td>
+                    <td><strong><?= e(price($t['price_adult'], $t['price_currency'] ?: null)) ?></strong><?php if ((float)$t['price_child'] > 0): ?><br><small class="muted">طفل: <?= e(price($t['price_child'], $t['price_currency'] ?: null)) ?></small><?php endif; ?><br><small class="muted"><?= has_public_price($t) ? 'سعر الفرد مؤكد' : 'السعر غير ظاهر للزوار' ?></small></td>
                     <td><?= (int)$t['img_count'] + ($t['cover_image'] ? 1 : 0) ?></td>
                     <td>
                         <form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$t['id'] ?>"><input type="hidden" name="action" value="toggle_featured">
